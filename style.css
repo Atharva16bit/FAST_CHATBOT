@@ -1,7 +1,7 @@
 /* Layout and branding only. Native widgets retain keyboard and accessible labels. */
 :root { --ink:#18283b; --muted:#607084; --accent:#087f8c; --paper:#f8f7f3; }
 .stApp { background:var(--paper); }
-[data-testid="stHeader"] { background:rgba(248,247,243,.96); }
+[data-testid="stHeader"] { background:var(--paper); }
 .block-container { max-width:960px; padding:2.8rem 2.2rem 6rem; }
 [data-testid="stVerticalBlock"] { gap:1rem; }
 h1,h2,h3 { color:var(--ink); }
@@ -42,7 +42,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible { outline:3px so
 /* One defined composer surface; no extra image tile or decorative whitespace. */
 [data-testid="stBottom"] { background:transparent; }
 [data-testid="stBottomBlockContainer"] { max-width:960px;padding:.7rem 2.2rem max(1.25rem, env(safe-area-inset-bottom));background:var(--paper); }
-[data-testid="stChatInput"] { border:1px solid #cbd5df;border-radius:16px;background:#fff;box-shadow:0 6px 22px rgba(24,40,59,.07); }
+[data-testid="stChatInput"] { border:1px solid #cbd5df;border-radius:16px;background:#fff;box-shadow:none; }
 [data-testid="stChatInput"]:focus-within { border-color:var(--accent);box-shadow:0 0 0 3px rgba(8,127,140,.12); }
 [data-testid="stChatInput"] textarea { background:transparent;font-size:16px;line-height:1.5;padding:15px 12px;color:var(--ink); }
 [data-testid="stChatInputSubmitButton"] { background:#087f8c;color:#fff;border-radius:11px;min-width:38px;min-height:38px;margin:7px; }

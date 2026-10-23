@@ -55,3 +55,14 @@ This section supersedes earlier notes about putting the composer below the title
 - Use the bottom composer and loading indicator from the preceding release.
 
 Validation: 47 automated tests pass, including personal records, score clarification, user-provided scholarship marks, topic buttons and URL configuration. Mobile device behaviour still requires a deployed phone check.
+
+## Rendering performance update
+
+- Streamed Gemini output repaints at most approximately once per 150ms, plus a final complete render, rather than reparsing the whole answer for every SDK chunk. No artificial sleep is used.
+- Show only the most recent six exchanges by default once history exceeds twelve messages. A Show earlier messages toggle restores the rest of the retained conversation. Transcript download still includes all retained messages.
+- Use an opaque header background and remove the decorative composer shadow. No overflow locks, scroll hijacking, global height overrides or console suppression are introduced.
+- This does not remove Streamlit frontend bundles or independent Community Cloud scripts.
+- Browser-extension scripts in the supplied report must be excluded by measuring with extensions disabled.
+- Compare cold and warm loads separately, and record a browser Performance trace during scrolling. No revised Lighthouse score or measured FPS improvement is claimed.
+
+Rendering validation: 48 automated tests pass, including showing earlier messages without losing retained history. Real scrolling performance still needs measurement in the deployed browser.

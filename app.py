@@ -75,6 +75,7 @@ with st.sidebar:
         st.session_state.last_intent = ''
         st.session_state.pop('retry_prompt', None)
         st.session_state.pop('show_fees', None)
+        st.session_state.pop('show_earlier_messages', None)
         st.rerun()
     st.divider()
     show_settings = get_setting('SHOW_API_SETTINGS', 'true').lower() == 'true'
@@ -148,7 +149,15 @@ if not st.session_state.messages:
                 prompt = question
     st.markdown('<div class="scope-note">Student project · Based on supplied 2026–27 information.<br>Confirm current fees, dates and availability with the university.</div>', unsafe_allow_html=True)
 
-for message in st.session_state.messages:
+# Limit default DOM size; keep all retained messages available on demand.
+visible_messages = st.session_state.messages
+if len(visible_messages) > 12:
+    show_earlier = st.toggle('Show earlier messages', value=False, key='show_earlier_messages')
+    if not show_earlier:
+        st.caption('Showing the latest 6 exchanges. Enable earlier messages to see more.')
+        visible_messages = visible_messages[-12:]
+
+for message in visible_messages:
     with st.chat_message(message['role'], avatar=str(ROOT / 'assets/jlu_icon.svg') if message['role']=='assistant' else None):
         st.markdown(clean_answer(message['content']))
         if message['role']=='assistant':
@@ -221,9 +230,14 @@ if prompt:
                 try:
                     client = session_client(key)
                     recent = [m['content'] for m in st.session_state.messages if m['role']=='user'][-2:]
+                    last_paint = 0.0
                     for piece in stream_answer(client, model, prompt, result.records, recent, detailed):
                         answer += piece
-                        placeholder.markdown(clean_answer(answer) + ' ▌')
+                        now = time.perf_counter()
+                        # Avoid repeatedly parsing Markdown for tiny token updates.
+                        if now - last_paint >= 0.15:
+                            placeholder.markdown(clean_answer(answer) + ' ▌')
+                            last_paint = now
                     if not answer.strip():
                         raise ValueError('No text response')
                     answer = clean_answer(answer)

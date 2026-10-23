@@ -42,6 +42,17 @@ class GuidanceTests(unittest.TestCase):
         next(b for b in app.button if b.label == 'My semester results').click().run()
         self.assertFalse(app.exception)
         self.assertEqual(app.session_state.messages[-1]['intent'], 'personal_records')
+    @patch.dict(os.environ, {'GEMINI_API_KEY':''})
+    def test_recent_history_can_expand_without_losing_messages(self):
+        app = AppTest.from_file(str(ROOT/'app.py')).run()
+        for _ in range(7):
+            app.chat_input[0].set_value('B.Tech CSE fees').run()
+        self.assertFalse(app.exception)
+        self.assertEqual(len(app.session_state.messages), 14)
+        self.assertEqual(len(app.chat_message), 12)
+        next(t for t in app.toggle if t.label == 'Show earlier messages').set_value(True).run()
+        self.assertEqual(len(app.chat_message), 14)
+        self.assertEqual(len(app.session_state.messages), 14)
     def test_erp_link_requires_configured_https(self):
         for value in ['', 'javascript:alert(1)', 'http://example.com', 'https://user:secret@example.com']:
             self.assertEqual(erp_link(value), '')
