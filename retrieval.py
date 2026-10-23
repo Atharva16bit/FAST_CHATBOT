@@ -187,6 +187,8 @@ class KnowledgeBase:
 
     def identify_intent(self, text):
         q = normalize(text)
+        if re.search(r'\b(other|another|ather)\s+(school|college|university)\b', q):
+            return 'out_of_scope'
         if re.fullmatch(r'(hi|hello|hey|namaste|good morning|good evening)[ !.]*', q):
             return 'greeting'
         if re.search(r'\b(goodbye|bye|see you|leaving now)\b', q):
@@ -249,9 +251,9 @@ class KnowledgeBase:
         if intent == 'goodbye':
             return Result(intent, direct_answer='Goodbye! Please confirm current admission details with the university before applying.')
         if intent == 'out_of_scope':
-            return Result(intent, direct_answer='I help with FAST admission and university information. You can ask about programs, fees, faculty, scholarships or hostel options.')
+            return Result(intent, direct_answer="I can help with information about the Faculty of Science & Technology (FAST) at Jagran Lakecity University. I don’t have information to answer that request.\n\nYou can ask me about **courses and duration, fees, admissions and documents, scholarships, hostel information, or faculty contacts**.\n\nFor example: ‘What are the B.Tech CSE fees?’ or ‘How do I apply?’")
         if intent == 'ask_clarification':
-            return Result(intent, direct_answer='Which FAST information do you need: programs, fees, admissions, scholarships, hostel or faculty?')
+            return Result(intent, direct_answer="I’m not sure what you mean. Could you rephrase your question?\n\nI can help with FAST **courses and duration, fees, admissions and documents, scholarships, hostel information, or faculty contacts**.\n\nTry asking: ‘Which courses are available?’ or ‘What are the BCA fees?’")
         if intent in NO_DATA:
             return Result(intent, direct_answer=NO_DATA[intent])
         topic = TOPICS.get(intent, intent)

@@ -20,7 +20,7 @@ def fee_answer(result):
     for record in result.records:
         if record['topic'] != 'program_fee':
             return ''
-        amounts = re.findall(r'INR ([\d,]+)', record['answer'])
+        amounts = re.findall(r'INR (\d(?:[\d,]*\d)?)', record['answer'])
         if len(amounts) != 6:
             return ''  # Preserve the original answer if its schema changes.
         resource, tuition, exam, total, admission, caution = amounts

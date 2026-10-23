@@ -35,5 +35,24 @@ class CoursePickerTests(unittest.TestCase):
         self.assertEqual(clean_answer('Apply online [KB0277, KB0031].'), 'Apply online.')
         self.assertIn('deadline has passed', clean_answer('The recorded deadline has passed.'))
 
+class ClarificationTests(unittest.TestCase):
+    def test_unrelated_school_does_not_return_fast_fees(self):
+        kb = KnowledgeBase(ROOT/'data')
+        for question in ['Ather School', 'other school fees', 'another university fees']:
+            result = kb.retrieve(question, ['B.Tech (Computer Science and Engineering)'])
+            self.assertEqual(result.intent, 'out_of_scope')
+            self.assertFalse(result.records)
+            self.assertIn('faculty contacts', result.direct_answer)
+    def test_unclear_message_explains_scope(self):
+        result = KnowledgeBase(ROOT/'data').retrieve('xyzabc')
+        self.assertEqual(result.intent, 'ask_clarification')
+        self.assertIn('rephrase', result.direct_answer)
+        self.assertIn('scholarships', result.direct_answer)
+    def test_fee_table_does_not_include_sentence_comma(self):
+        result = KnowledgeBase(ROOT/'data').retrieve('B.Tech CSE fees')
+        answer = fee_answer(result)
+        self.assertIn('| Resource fee | ₹35,000 |', answer)
+        self.assertNotIn('₹35,000,', answer)
+
 if __name__ == '__main__':
     unittest.main()
