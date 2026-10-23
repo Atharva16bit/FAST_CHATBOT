@@ -1,3 +1,5 @@
+> Final release: see FINAL_AUDIT.md and ../START_HERE.md for the current question queue, loader, auto-scroll and test results. Earlier UI descriptions below are historical.
+
 > UI revision: see ../UI_CHANGES.md for the current course-fee selector, removal of technical chat panels, and 38-test result. Earlier UI descriptions below reflect the previous release.
 
 # FAST CHATBOT

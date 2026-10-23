@@ -1,0 +1,724 @@
+{
+  "build": "2026.10.23-audited",
+  "date": "2026-10-23",
+  "automated_tests": 60,
+  "automated_tests_passed": 60,
+  "topic_cases": 100,
+  "topic_cases_passed": 100,
+  "original_regression_cases": 47,
+  "original_regression_matches": 47,
+  "development_example_count": 161,
+  "development_intent_matches": 160,
+  "development_label_differences": [
+    {
+      "question": "Tell me the fees.",
+      "expected": "ask_clarification",
+      "actual": "program_fee",
+      "note": "The fee route asks the user to select a course; this fulfils the clarification behaviour despite the different label."
+    }
+  ],
+  "browser_test_scope": "Local Chromium 153; 1280x800 desktop and 390x844 touch-enabled mobile viewport; no real Gemini key. See browser_validation.json. Physical mobile IME and production Cloud scripts were not tested.",
+  "limitations": "These are curated regression checks used during development, not independent held-out accuracy or a guarantee that every question works. No new Lighthouse score or live Gemini quality measurement.",
+  "topic_results": [
+    {
+      "question": "faculty",
+      "expected_intent": "faculty",
+      "actual_intent": "faculty",
+      "records": 14,
+      "passed": true
+    },
+    {
+      "question": "FACULTY",
+      "expected_intent": "faculty",
+      "actual_intent": "faculty",
+      "records": 14,
+      "passed": true
+    },
+    {
+      "question": "Tell me about faculty",
+      "expected_intent": "faculty",
+      "actual_intent": "faculty",
+      "records": 14,
+      "passed": true
+    },
+    {
+      "question": "faculty members",
+      "expected_intent": "faculty",
+      "actual_intent": "faculty",
+      "records": 14,
+      "passed": true
+    },
+    {
+      "question": "teaching staff",
+      "expected_intent": "faculty",
+      "actual_intent": "faculty",
+      "records": 14,
+      "passed": true
+    },
+    {
+      "question": "teachers",
+      "expected_intent": "faculty",
+      "actual_intent": "faculty",
+      "records": 14,
+      "passed": true
+    },
+    {
+      "question": "Who are the faculty members?",
+      "expected_intent": "faculty",
+      "actual_intent": "faculty",
+      "records": 14,
+      "passed": true
+    },
+    {
+      "question": "faculty contact",
+      "expected_intent": "faculty",
+      "actual_intent": "faculty",
+      "records": 14,
+      "passed": true
+    },
+    {
+      "question": "faculty emails",
+      "expected_intent": "faculty",
+      "actual_intent": "faculty",
+      "records": 14,
+      "passed": true
+    },
+    {
+      "question": "Hi tell me about faculty",
+      "expected_intent": "faculty",
+      "actual_intent": "faculty",
+      "records": 14,
+      "passed": true
+    },
+    {
+      "question": "programs",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 10,
+      "passed": true
+    },
+    {
+      "question": "programmes",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 10,
+      "passed": true
+    },
+    {
+      "question": "courses",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 10,
+      "passed": true
+    },
+    {
+      "question": "Which courses are available?",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 10,
+      "passed": true
+    },
+    {
+      "question": "List all courses",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 10,
+      "passed": true
+    },
+    {
+      "question": "Tell me about courses",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 10,
+      "passed": true
+    },
+    {
+      "question": "What programs are offered?",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 10,
+      "passed": true
+    },
+    {
+      "question": "schools",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 10,
+      "passed": true
+    },
+    {
+      "question": "departments",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 10,
+      "passed": true
+    },
+    {
+      "question": "MCA",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "Tell me about MCA",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "B.Tech CSE",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "BCA UX",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "BTech",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 2,
+      "passed": true
+    },
+    {
+      "question": "B.Tech courses",
+      "expected_intent": "program_info",
+      "actual_intent": "program_info",
+      "records": 2,
+      "passed": true
+    },
+    {
+      "question": "admission",
+      "expected_intent": "application_process",
+      "actual_intent": "application_process",
+      "records": 2,
+      "passed": true
+    },
+    {
+      "question": "admissions",
+      "expected_intent": "application_process",
+      "actual_intent": "application_process",
+      "records": 2,
+      "passed": true
+    },
+    {
+      "question": "Tell me about admissions",
+      "expected_intent": "application_process",
+      "actual_intent": "application_process",
+      "records": 2,
+      "passed": true
+    },
+    {
+      "question": "How do I apply?",
+      "expected_intent": "application_process",
+      "actual_intent": "application_process",
+      "records": 2,
+      "passed": true
+    },
+    {
+      "question": "Admission steps",
+      "expected_intent": "application_process",
+      "actual_intent": "application_process",
+      "records": 2,
+      "passed": true
+    },
+    {
+      "question": "Admission process",
+      "expected_intent": "application_process",
+      "actual_intent": "application_process",
+      "records": 2,
+      "passed": true
+    },
+    {
+      "question": "HI ADMISSION",
+      "expected_intent": "application_process",
+      "actual_intent": "application_process",
+      "records": 2,
+      "passed": true
+    },
+    {
+      "question": "fees",
+      "expected_intent": "program_fee",
+      "actual_intent": "program_fee",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "fee",
+      "expected_intent": "program_fee",
+      "actual_intent": "program_fee",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "Tell me about fees",
+      "expected_intent": "program_fee",
+      "actual_intent": "program_fee",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "B.Tech CSE fees",
+      "expected_intent": "program_fee",
+      "actual_intent": "program_fee",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "BTech AI fees",
+      "expected_intent": "program_fee",
+      "actual_intent": "program_fee",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "MCA fees",
+      "expected_intent": "program_fee",
+      "actual_intent": "program_fee",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "BCA UX fees",
+      "expected_intent": "program_fee",
+      "actual_intent": "program_fee",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "BCA full stack fees",
+      "expected_intent": "program_fee",
+      "actual_intent": "program_fee",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "BCA Cloud fees",
+      "expected_intent": "program_fee",
+      "actual_intent": "program_fee",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "BCA DS fees",
+      "expected_intent": "program_fee",
+      "actual_intent": "program_fee",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "B.Tech CSE fee breakdown",
+      "expected_intent": "fee_breakdown",
+      "actual_intent": "fee_breakdown",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "scholarship",
+      "expected_intent": "scholarship",
+      "actual_intent": "scholarship",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "scholarships",
+      "expected_intent": "scholarship",
+      "actual_intent": "scholarship",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "Tell me about scholarships",
+      "expected_intent": "scholarship",
+      "actual_intent": "scholarship",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "Academic scholarship",
+      "expected_intent": "scholarship",
+      "actual_intent": "scholarship",
+      "records": 3,
+      "passed": true
+    },
+    {
+      "question": "Academic scholarship bands",
+      "expected_intent": "scholarship",
+      "actual_intent": "scholarship",
+      "records": 3,
+      "passed": true
+    },
+    {
+      "question": "hostel",
+      "expected_intent": "hostel_fee",
+      "actual_intent": "hostel_fee",
+      "records": 6,
+      "passed": true
+    },
+    {
+      "question": "Hostel fees",
+      "expected_intent": "hostel_fee",
+      "actual_intent": "hostel_fee",
+      "records": 6,
+      "passed": true
+    },
+    {
+      "question": "Tell me about hostel",
+      "expected_intent": "hostel_fee",
+      "actual_intent": "hostel_fee",
+      "records": 6,
+      "passed": true
+    },
+    {
+      "question": "Accommodation",
+      "expected_intent": "hostel_fee",
+      "actual_intent": "hostel_fee",
+      "records": 6,
+      "passed": true
+    },
+    {
+      "question": "double AC hostel fees",
+      "expected_intent": "hostel_fee",
+      "actual_intent": "hostel_fee",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "documents",
+      "expected_intent": "documents",
+      "actual_intent": "documents",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "Admission documents",
+      "expected_intent": "documents",
+      "actual_intent": "documents",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "Required documents",
+      "expected_intent": "documents",
+      "actual_intent": "documents",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "UG admission documents",
+      "expected_intent": "documents",
+      "actual_intent": "documents",
+      "records": 6,
+      "passed": true
+    },
+    {
+      "question": "PG admission documents",
+      "expected_intent": "documents",
+      "actual_intent": "documents",
+      "records": 5,
+      "passed": true
+    },
+    {
+      "question": "eligibility",
+      "expected_intent": "eligibility",
+      "actual_intent": "eligibility",
+      "records": 3,
+      "passed": true
+    },
+    {
+      "question": "B.Tech CSE eligibility",
+      "expected_intent": "eligibility",
+      "actual_intent": "eligibility",
+      "records": 2,
+      "passed": true
+    },
+    {
+      "question": "MCA eligibility",
+      "expected_intent": "eligibility",
+      "actual_intent": "eligibility",
+      "records": 2,
+      "passed": true
+    },
+    {
+      "question": "contact",
+      "expected_intent": "contact",
+      "actual_intent": "contact",
+      "records": 2,
+      "passed": true
+    },
+    {
+      "question": "email",
+      "expected_intent": "contact",
+      "actual_intent": "contact",
+      "records": 2,
+      "passed": true
+    },
+    {
+      "question": "Admissions email",
+      "expected_intent": "contact",
+      "actual_intent": "contact",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "Admission contact details",
+      "expected_intent": "contact",
+      "actual_intent": "contact",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "refund grievances email",
+      "expected_intent": "contact",
+      "actual_intent": "contact",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "faculty phone",
+      "expected_intent": "faculty_phone",
+      "actual_intent": "faculty_phone",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "faculty mobile number",
+      "expected_intent": "faculty_phone",
+      "actual_intent": "faculty_phone",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "DBMS teacher",
+      "expected_intent": "faculty_assignment",
+      "actual_intent": "faculty_assignment",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "Who teaches DBMS?",
+      "expected_intent": "faculty_assignment",
+      "actual_intent": "faculty_assignment",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "UX teacher",
+      "expected_intent": "faculty_assignment",
+      "actual_intent": "faculty_assignment",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "Who teaches Engineering Physics?",
+      "expected_intent": "faculty_assignment",
+      "actual_intent": "faculty_assignment",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "OOP teacher",
+      "expected_intent": "faculty_assignment",
+      "actual_intent": "faculty_assignment",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "OS teacher",
+      "expected_intent": "faculty_assignment",
+      "actual_intent": "faculty_assignment",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "CN teacher",
+      "expected_intent": "faculty_assignment",
+      "actual_intent": "faculty_assignment",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "DAA teacher",
+      "expected_intent": "faculty_assignment",
+      "actual_intent": "faculty_assignment",
+      "records": 1,
+      "passed": true
+    },
+    {
+      "question": "List all faculty subjects",
+      "expected_intent": "faculty_assignment",
+      "actual_intent": "faculty_assignment",
+      "records": 24,
+      "passed": true
+    },
+    {
+      "question": "Show faculty course mapping",
+      "expected_intent": "faculty_assignment",
+      "actual_intent": "faculty_assignment",
+      "records": 24,
+      "passed": true
+    },
+    {
+      "question": "Atharva score",
+      "expected_intent": "personal_records",
+      "actual_intent": "personal_records",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "Parth score",
+      "expected_intent": "personal_records",
+      "actual_intent": "personal_records",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "Aarna marks",
+      "expected_intent": "personal_records",
+      "actual_intent": "personal_records",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "my CGPA",
+      "expected_intent": "personal_records",
+      "actual_intent": "personal_records",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "my attendance",
+      "expected_intent": "personal_records",
+      "actual_intent": "personal_records",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "What are my results?",
+      "expected_intent": "personal_records",
+      "actual_intent": "personal_records",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "score",
+      "expected_intent": "score_clarification",
+      "actual_intent": "score_clarification",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "marks",
+      "expected_intent": "score_clarification",
+      "actual_intent": "score_clarification",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "results",
+      "expected_intent": "score_clarification",
+      "actual_intent": "score_clarification",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "Ather School",
+      "expected_intent": "out_of_scope",
+      "actual_intent": "out_of_scope",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "other university fees",
+      "expected_intent": "out_of_scope",
+      "actual_intent": "out_of_scope",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "Write a Python sorting program",
+      "expected_intent": "out_of_scope",
+      "actual_intent": "out_of_scope",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "weather today",
+      "expected_intent": "out_of_scope",
+      "actual_intent": "out_of_scope",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "xyzabc",
+      "expected_intent": "ask_clarification",
+      "actual_intent": "ask_clarification",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "qwertyuiop",
+      "expected_intent": "ask_clarification",
+      "actual_intent": "ask_clarification",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "hello",
+      "expected_intent": "greeting",
+      "actual_intent": "greeting",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "hi",
+      "expected_intent": "greeting",
+      "actual_intent": "greeting",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "namaste",
+      "expected_intent": "greeting",
+      "actual_intent": "greeting",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "thanks",
+      "expected_intent": "thanks",
+      "actual_intent": "thanks",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "thank you",
+      "expected_intent": "thanks",
+      "actual_intent": "thanks",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "refund policy",
+      "expected_intent": "refund",
+      "actual_intent": "refund",
+      "records": 0,
+      "passed": true
+    },
+    {
+      "question": "Are admissions open now?",
+      "expected_intent": "live_admission",
+      "actual_intent": "live_admission",
+      "records": 1,
+      "passed": true
+    }
+  ]
+}

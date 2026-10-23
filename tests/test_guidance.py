@@ -58,5 +58,30 @@ class GuidanceTests(unittest.TestCase):
             self.assertEqual(erp_link(value), '')
         self.assertEqual(erp_link('https://example.edu/student'), 'https://example.edu/student')
 
+class FacultyRegressionTests(unittest.TestCase):
+    def test_generic_faculty_phrases_return_complete_directory(self):
+        kb = KnowledgeBase(ROOT/'data')
+        for question in ['faculty', 'TELL ME ABOUT FACULTY', 'faculty details', 'teaching staff', 'teachers']:
+            result = kb.retrieve(question)
+            self.assertEqual(result.intent, 'faculty', question)
+            self.assertEqual(len(result.records), 14, question)
+            self.assertEqual(result.records[0]['entity'], 'Dr. Dileep Kumar Singh')
+            self.assertIn('reshma.chavan@jlu.edu.in', result.direct_answer)
+    def test_specific_faculty_and_brand_name_do_not_get_hijacked(self):
+        kb = KnowledgeBase(ROOT/'data')
+        self.assertEqual(len(kb.retrieve('Shivangee Nagar email').records), 1)
+        self.assertEqual(kb.retrieve('Faculty of Science and Technology B.Tech CSE fees').intent, 'program_fee')
+        self.assertEqual(kb.retrieve('faculty subjects').intent, 'faculty_assignment')
+    @patch.dict(os.environ, {'GEMINI_API_KEY':''})
+    def test_exact_reported_question_in_ui(self):
+        app = AppTest.from_file(str(ROOT/'app.py')).run()
+        app.chat_input[0].set_value('TELL ME ABOUT FACULTY').run()
+        self.assertFalse(app.exception)
+        reply = app.session_state.messages[-1]
+        self.assertEqual(reply['intent'], 'faculty')
+        self.assertEqual(len(reply['sources']), 14)
+        self.assertNotIn('couldn’t find', reply['content'])
+        self.assertTrue(any(c.value == '✓ Answer ready' for c in app.caption))
+
 if __name__ == '__main__':
     unittest.main()

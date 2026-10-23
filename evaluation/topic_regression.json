@@ -1,0 +1,532 @@
+[
+  {
+    "question": "faculty",
+    "intent": "faculty",
+    "records": 14,
+    "contains": "dileep.singh@jlu.edu.in"
+  },
+  {
+    "question": "FACULTY",
+    "intent": "faculty",
+    "records": 14,
+    "contains": "dileep.singh@jlu.edu.in"
+  },
+  {
+    "question": "Tell me about faculty",
+    "intent": "faculty",
+    "records": 14,
+    "contains": "dileep.singh@jlu.edu.in"
+  },
+  {
+    "question": "faculty members",
+    "intent": "faculty",
+    "records": 14,
+    "contains": "dileep.singh@jlu.edu.in"
+  },
+  {
+    "question": "teaching staff",
+    "intent": "faculty",
+    "records": 14,
+    "contains": "dileep.singh@jlu.edu.in"
+  },
+  {
+    "question": "teachers",
+    "intent": "faculty",
+    "records": 14,
+    "contains": "dileep.singh@jlu.edu.in"
+  },
+  {
+    "question": "Who are the faculty members?",
+    "intent": "faculty",
+    "records": 14,
+    "contains": "dileep.singh@jlu.edu.in"
+  },
+  {
+    "question": "faculty contact",
+    "intent": "faculty",
+    "records": 14,
+    "contains": "dileep.singh@jlu.edu.in"
+  },
+  {
+    "question": "faculty emails",
+    "intent": "faculty",
+    "records": 14,
+    "contains": "dileep.singh@jlu.edu.in"
+  },
+  {
+    "question": "Hi tell me about faculty",
+    "intent": "faculty",
+    "records": 14,
+    "contains": "dileep.singh@jlu.edu.in"
+  },
+  {
+    "question": "programs",
+    "intent": "program_info",
+    "records": 10
+  },
+  {
+    "question": "programmes",
+    "intent": "program_info",
+    "records": 10
+  },
+  {
+    "question": "courses",
+    "intent": "program_info",
+    "records": 10
+  },
+  {
+    "question": "Which courses are available?",
+    "intent": "program_info",
+    "records": 10
+  },
+  {
+    "question": "List all courses",
+    "intent": "program_info",
+    "records": 10
+  },
+  {
+    "question": "Tell me about courses",
+    "intent": "program_info",
+    "records": 10
+  },
+  {
+    "question": "What programs are offered?",
+    "intent": "program_info",
+    "records": 10
+  },
+  {
+    "question": "schools",
+    "intent": "program_info",
+    "records": 10
+  },
+  {
+    "question": "departments",
+    "intent": "program_info",
+    "records": 10
+  },
+  {
+    "question": "MCA",
+    "intent": "program_info",
+    "records": 1
+  },
+  {
+    "question": "Tell me about MCA",
+    "intent": "program_info",
+    "records": 1
+  },
+  {
+    "question": "B.Tech CSE",
+    "intent": "program_info",
+    "records": 1
+  },
+  {
+    "question": "BCA UX",
+    "intent": "program_info",
+    "records": 1
+  },
+  {
+    "question": "BTech",
+    "intent": "program_info",
+    "records": 2
+  },
+  {
+    "question": "B.Tech courses",
+    "intent": "program_info",
+    "records": 2
+  },
+  {
+    "question": "admission",
+    "intent": "application_process",
+    "records": 2
+  },
+  {
+    "question": "admissions",
+    "intent": "application_process",
+    "records": 2
+  },
+  {
+    "question": "Tell me about admissions",
+    "intent": "application_process",
+    "records": 2
+  },
+  {
+    "question": "How do I apply?",
+    "intent": "application_process",
+    "records": 2
+  },
+  {
+    "question": "Admission steps",
+    "intent": "application_process",
+    "records": 2
+  },
+  {
+    "question": "Admission process",
+    "intent": "application_process",
+    "records": 2
+  },
+  {
+    "question": "HI ADMISSION",
+    "intent": "application_process",
+    "records": 2
+  },
+  {
+    "question": "fees",
+    "intent": "program_fee",
+    "records": 0,
+    "contains": "specialization"
+  },
+  {
+    "question": "fee",
+    "intent": "program_fee",
+    "records": 0,
+    "contains": "specialization"
+  },
+  {
+    "question": "Tell me about fees",
+    "intent": "program_fee",
+    "records": 0,
+    "contains": "specialization"
+  },
+  {
+    "question": "B.Tech CSE fees",
+    "intent": "program_fee",
+    "records": 1
+  },
+  {
+    "question": "BTech AI fees",
+    "intent": "program_fee",
+    "records": 1
+  },
+  {
+    "question": "MCA fees",
+    "intent": "program_fee",
+    "records": 1
+  },
+  {
+    "question": "BCA UX fees",
+    "intent": "program_fee",
+    "records": 1
+  },
+  {
+    "question": "BCA full stack fees",
+    "intent": "program_fee",
+    "records": 1
+  },
+  {
+    "question": "BCA Cloud fees",
+    "intent": "program_fee",
+    "records": 1
+  },
+  {
+    "question": "BCA DS fees",
+    "intent": "program_fee",
+    "records": 1
+  },
+  {
+    "question": "B.Tech CSE fee breakdown",
+    "intent": "fee_breakdown",
+    "records": 1,
+    "contains": "150,000"
+  },
+  {
+    "question": "scholarship",
+    "intent": "scholarship",
+    "records": 0,
+    "contains": "category"
+  },
+  {
+    "question": "scholarships",
+    "intent": "scholarship",
+    "records": 0,
+    "contains": "category"
+  },
+  {
+    "question": "Tell me about scholarships",
+    "intent": "scholarship",
+    "records": 0,
+    "contains": "category"
+  },
+  {
+    "question": "Academic scholarship",
+    "intent": "scholarship",
+    "records": 3
+  },
+  {
+    "question": "Academic scholarship bands",
+    "intent": "scholarship",
+    "records": 3
+  },
+  {
+    "question": "hostel",
+    "intent": "hostel_fee",
+    "records": 6
+  },
+  {
+    "question": "Hostel fees",
+    "intent": "hostel_fee",
+    "records": 6
+  },
+  {
+    "question": "Tell me about hostel",
+    "intent": "hostel_fee",
+    "records": 6
+  },
+  {
+    "question": "Accommodation",
+    "intent": "hostel_fee",
+    "records": 6
+  },
+  {
+    "question": "double AC hostel fees",
+    "intent": "hostel_fee",
+    "records": 1,
+    "contains": "per semester"
+  },
+  {
+    "question": "documents",
+    "intent": "documents",
+    "records": 0,
+    "contains": "undergraduate"
+  },
+  {
+    "question": "Admission documents",
+    "intent": "documents",
+    "records": 0,
+    "contains": "undergraduate"
+  },
+  {
+    "question": "Required documents",
+    "intent": "documents",
+    "records": 0,
+    "contains": "undergraduate"
+  },
+  {
+    "question": "UG admission documents",
+    "intent": "documents"
+  },
+  {
+    "question": "PG admission documents",
+    "intent": "documents"
+  },
+  {
+    "question": "eligibility",
+    "intent": "eligibility"
+  },
+  {
+    "question": "B.Tech CSE eligibility",
+    "intent": "eligibility"
+  },
+  {
+    "question": "MCA eligibility",
+    "intent": "eligibility"
+  },
+  {
+    "question": "contact",
+    "intent": "contact",
+    "contains": "admission@jlu.edu.in"
+  },
+  {
+    "question": "email",
+    "intent": "contact",
+    "contains": "admission@jlu.edu.in"
+  },
+  {
+    "question": "Admissions email",
+    "intent": "contact",
+    "contains": "admission@jlu.edu.in"
+  },
+  {
+    "question": "Admission contact details",
+    "intent": "contact",
+    "contains": "admission@jlu.edu.in"
+  },
+  {
+    "question": "refund grievances email",
+    "intent": "contact",
+    "records": 1,
+    "contains": "fee.info@jlu.edu.in"
+  },
+  {
+    "question": "faculty phone",
+    "intent": "faculty_phone",
+    "records": 0,
+    "contains": "not provided"
+  },
+  {
+    "question": "faculty mobile number",
+    "intent": "faculty_phone",
+    "records": 0,
+    "contains": "not provided"
+  },
+  {
+    "question": "DBMS teacher",
+    "intent": "faculty_assignment",
+    "records": 1
+  },
+  {
+    "question": "Who teaches DBMS?",
+    "intent": "faculty_assignment",
+    "records": 1
+  },
+  {
+    "question": "UX teacher",
+    "intent": "faculty_assignment",
+    "records": 1
+  },
+  {
+    "question": "Who teaches Engineering Physics?",
+    "intent": "faculty_assignment",
+    "records": 1
+  },
+  {
+    "question": "OOP teacher",
+    "intent": "faculty_assignment",
+    "records": 1
+  },
+  {
+    "question": "OS teacher",
+    "intent": "faculty_assignment",
+    "records": 1
+  },
+  {
+    "question": "CN teacher",
+    "intent": "faculty_assignment",
+    "records": 1
+  },
+  {
+    "question": "DAA teacher",
+    "intent": "faculty_assignment",
+    "records": 1
+  },
+  {
+    "question": "List all faculty subjects",
+    "intent": "faculty_assignment",
+    "records": 24
+  },
+  {
+    "question": "Show faculty course mapping",
+    "intent": "faculty_assignment",
+    "records": 24
+  },
+  {
+    "question": "Atharva score",
+    "intent": "personal_records",
+    "records": 0,
+    "contains": "ERP"
+  },
+  {
+    "question": "Parth score",
+    "intent": "personal_records",
+    "records": 0,
+    "contains": "ERP"
+  },
+  {
+    "question": "Aarna marks",
+    "intent": "personal_records",
+    "records": 0,
+    "contains": "ERP"
+  },
+  {
+    "question": "my CGPA",
+    "intent": "personal_records",
+    "records": 0,
+    "contains": "ERP"
+  },
+  {
+    "question": "my attendance",
+    "intent": "personal_records",
+    "records": 0,
+    "contains": "ERP"
+  },
+  {
+    "question": "What are my results?",
+    "intent": "personal_records",
+    "records": 0,
+    "contains": "ERP"
+  },
+  {
+    "question": "score",
+    "intent": "score_clarification",
+    "records": 0,
+    "contains": "Which score"
+  },
+  {
+    "question": "marks",
+    "intent": "score_clarification",
+    "records": 0,
+    "contains": "Which score"
+  },
+  {
+    "question": "results",
+    "intent": "score_clarification",
+    "records": 0,
+    "contains": "Which score"
+  },
+  {
+    "question": "Ather School",
+    "intent": "out_of_scope",
+    "records": 0
+  },
+  {
+    "question": "other university fees",
+    "intent": "out_of_scope",
+    "records": 0
+  },
+  {
+    "question": "Write a Python sorting program",
+    "intent": "out_of_scope",
+    "records": 0
+  },
+  {
+    "question": "weather today",
+    "intent": "out_of_scope",
+    "records": 0
+  },
+  {
+    "question": "xyzabc",
+    "intent": "ask_clarification",
+    "records": 0,
+    "contains": "rephrase"
+  },
+  {
+    "question": "qwertyuiop",
+    "intent": "ask_clarification",
+    "records": 0,
+    "contains": "rephrase"
+  },
+  {
+    "question": "hello",
+    "intent": "greeting",
+    "records": 0
+  },
+  {
+    "question": "hi",
+    "intent": "greeting",
+    "records": 0
+  },
+  {
+    "question": "namaste",
+    "intent": "greeting",
+    "records": 0
+  },
+  {
+    "question": "thanks",
+    "intent": "thanks",
+    "records": 0
+  },
+  {
+    "question": "thank you",
+    "intent": "thanks",
+    "records": 0
+  },
+  {
+    "question": "refund policy",
+    "intent": "refund",
+    "contains": "cannot calculate"
+  },
+  {
+    "question": "Are admissions open now?",
+    "intent": "live_admission",
+    "contains": "passed"
+  }
+]

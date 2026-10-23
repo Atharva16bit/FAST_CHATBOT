@@ -6,11 +6,13 @@ from pathlib import Path
 import streamlit as st
 from dotenv import load_dotenv
 from assistant import create_client, stream_answer, friendly_error
-from retrieval import KnowledgeBase
+from retrieval import KnowledgeBase, Result
 from presentation import clean_answer, fee_answer
 from guidance import TOPIC_CHOICES, SCORE_CHOICES, needs_guidance, erp_link
+from ui_feedback import LOADING_HTML, MIN_LOADING_SECONDS, scroll_to_latest
 from connection import configured_key, connection_id, verify_connection, get_setting
 
+APP_VERSION = '2026.10.23-audited'
 ROOT = Path(__file__).resolve().parent
 load_dotenv(ROOT / '.env')
 st.set_page_config(page_title='FAST_CHATBOT | JLU',
@@ -27,12 +29,14 @@ def load_knowledge(version):
 try:
     version = tuple((ROOT / 'data' / name).stat().st_mtime_ns for name in
         ['knowledge.jsonl', 'intent_examples.jsonl', 'faculty_directory.jsonl'])
+    # Routing-code changes must also invalidate the cached knowledge object.
+    version += ((ROOT / 'retrieval.py').stat().st_mtime_ns,)
     kb = load_knowledge(version)
 except (OSError, ValueError, KeyError):
     st.error('The knowledge files are missing or invalid. Restore the data folder from the project ZIP and restart.')
     st.stop()
 
-for field, default in [('messages', []), ('programs', []), ('client', None), ('last_intent','')]:
+for field, default in [('messages', []), ('programs', []), ('client', None), ('last_intent',''), ('pending_prompt', None), ('turn_sequence', 0)]:
     if field not in st.session_state:
         st.session_state[field] = default
 
@@ -63,14 +67,41 @@ def save_turn(question, answer, result, elapsed, mode, warning=''):
         st.session_state.programs = result.programs
     elif result.intent not in {'thanks','greeting'}:
         st.session_state.programs = []
-    st.session_state.last_intent = result.intent
+    if result.intent not in {'thanks', 'greeting'}:
+        st.session_state.last_intent = result.intent
 
+
+def queue_question(question, reset_program=False, retry=False):
+    question = question.strip()
+    if not question or st.session_state.pending_prompt:
+        return
+    if reset_program:
+        st.session_state.programs = []
+    if retry and len(st.session_state.messages) >= 2 and st.session_state.messages[-2]['content'] == question:
+        st.session_state.messages = st.session_state.messages[:-2]
+    st.session_state.pending_prompt = question
+    st.session_state.turn_sequence += 1
+    st.session_state.show_fees = False
+    st.session_state.pop('retry_prompt', None)
+
+
+def queue_typed_question():
+    queue_question(st.session_state.get('chat_prompt', ''))
+
+
+def choose_fees():
+    st.session_state.show_fees = True
+    st.session_state.programs = []
+
+
+is_pending = bool(st.session_state.pending_prompt)
 
 with st.sidebar:
     st.image(str(ROOT / 'assets/jlu_wordmark.svg'), width='stretch')
     st.markdown('<div class="sidebar-label">FACULTY OF SCIENCE & TECHNOLOGY</div><p class="sidebar-intro">Your admission information desk.</p>', unsafe_allow_html=True)
-    if st.button('＋ New conversation', use_container_width=True, type='primary'):
+    if st.button('＋ New conversation', use_container_width=True, type='primary', disabled=is_pending):
         st.session_state.messages = []
+        st.session_state.pending_prompt = None
         st.session_state.programs = []
         st.session_state.last_intent = ''
         st.session_state.pop('retry_prompt', None)
@@ -118,8 +149,7 @@ with st.sidebar:
     else:
         st.caption('AI explanations available' if key else 'Dataset information available')
     st.divider()
-    if st.button('View course fees', use_container_width=True):
-        st.session_state.show_fees = not st.session_state.get('show_fees', False)
+    st.button('View course fees', use_container_width=True, on_click=choose_fees, disabled=is_pending)
     st.markdown('**Ask about FAST**')
     st.caption('Programs and duration\n\nFees and scholarships\n\nAdmissions and documents\n\nHostel and faculty')
     if st.session_state.messages:
@@ -128,132 +158,142 @@ with st.sidebar:
             for m in st.session_state.messages)
         st.download_button('Download conversation', text, 'FAST_CHATBOT-chat.txt', 'text/plain', use_container_width=True)
     with st.expander('About this assistant'):
+        st.caption(f'Build {APP_VERSION}')
         st.caption('Student project using supplied 2026–27 information. Confirm current details with the university.')
         st.caption('No live seats or personal application access. With Gemini enabled, your question, up to two recent questions and selected records are sent to Google.')
 
 st.markdown(f'<div class="product-header"><img src="{asset_uri("jlu_icon.svg")}" alt="Jagran Lakecity University icon"><div><h1>FAST_CHATBOT</h1><p>Faculty of Science &amp; Technology · Jagran Lakecity University</p></div></div>', unsafe_allow_html=True)
 
-prompt = None
-if not st.session_state.messages:
+if not st.session_state.messages and not is_pending:
     st.markdown('<section class="welcome"><div class="eyebrow">A clearer start to your next chapter</div><h2>Your questions.<br>Your next step.</h2><p>Explore programs, understand fees, and find the information you need before applying to FAST.</p></section>', unsafe_allow_html=True)
-    options = [('Explore programs','Which programs are listed under FAST?'),
-               ('Understand fees',None),
-               ('Admission steps','What application steps does the supplied FAQ describe?'),
-               ('Faculty directory','List the faculty directory.')]
+    options = [('Explore programs', 'Which programs are listed under FAST?'),
+               ('Understand fees', None),
+               ('Admission steps', 'How do I apply for admission?'),
+               ('Faculty directory', 'List the faculty directory.')]
     cols = st.columns(2)
-    for i,(label,question) in enumerate(options):
-        if cols[i % 2].button(label, use_container_width=True):
-            if question is None:
-                st.session_state.show_fees = True
-            else:
-                prompt = question
+    for i, (label, question) in enumerate(options):
+        if question is None:
+            cols[i % 2].button(label, use_container_width=True, on_click=choose_fees)
+        else:
+            cols[i % 2].button(label, use_container_width=True, on_click=queue_question, args=(question, True))
     st.markdown('<div class="scope-note">Student project · Based on supplied 2026–27 information.<br>Confirm current fees, dates and availability with the university.</div>', unsafe_allow_html=True)
 
-# Limit default DOM size; keep all retained messages available on demand.
 visible_messages = st.session_state.messages
 if len(visible_messages) > 12:
-    show_earlier = st.toggle('Show earlier messages', value=False, key='show_earlier_messages')
+    show_earlier = st.toggle('Show earlier messages', value=False, key='show_earlier_messages', disabled=is_pending)
     if not show_earlier:
         st.caption('Showing the latest 6 exchanges. Enable earlier messages to see more.')
         visible_messages = visible_messages[-12:]
 
 for message in visible_messages:
-    with st.chat_message(message['role'], avatar=str(ROOT / 'assets/jlu_icon.svg') if message['role']=='assistant' else None):
+    with st.chat_message(message['role'], avatar=str(ROOT/'assets/jlu_icon.svg') if message['role'] == 'assistant' else None):
+        if message['role'] == 'assistant':
+            st.caption('✓ Answer ready')
         st.markdown(clean_answer(message['content']))
-        if message['role']=='assistant':
-            if message.get('warning'):
-                st.warning(message['warning'])
+        if message.get('warning'):
+            st.warning(message['warning'])
 
-# Offer recovery choices below the most recent assistant reply.
-latest = st.session_state.messages[-1] if st.session_state.messages else None
-if latest and latest['role'] == 'assistant' and needs_guidance(latest):
-    score_question = latest.get('intent') == 'score_clarification'
-    choices = SCORE_CHOICES if score_question else TOPIC_CHOICES
-    st.caption('Choose a score type' if score_question else 'Explore FAST information')
-    choice_columns = st.columns(2)
-    for index, (label, question) in enumerate(choices):
-        if choice_columns[index % 2].button(label, key=f'guidance_{index}', use_container_width=True):
-            st.session_state.programs = []
-            if question is None:
-                st.session_state.show_fees = True
-            else:
-                prompt = question
-    st.link_button('Visit official JLU website ↗', 'https://www.jlu.edu.in/', use_container_width=True)
-    portal = erp_link(get_setting('JLU_ERP_URL', ''))
-    if portal:
-        st.link_button('Open student ERP ↗', portal, use_container_width=True)
-
-# Course choices also appear when a typed fee question needs a program.
-needs_course = (st.session_state.last_intent in {'program_fee', 'fee_breakdown'}
-                and not st.session_state.programs)
-if st.session_state.get('show_fees', False) or needs_course:
-    st.markdown('### Choose a course')
-    st.caption('Academic fees · 2026–27')
-    courses = list(dict.fromkeys(r['entity'] for r in kb.by_topic['program_fee']))
-    course_columns = st.columns(2)
-    for index, course in enumerate(courses):
-        if course_columns[index % 2].button(course, key=f'fee_course_{index}',
-                                             use_container_width=True):
-            prompt = f'What is the annual fee breakdown for {course} for 2026-27?'
-            st.session_state.show_fees = False
-
-
-if st.session_state.get('retry_prompt'):
-    if st.button('Retry last AI explanation', disabled=not key or not model):
-        prompt = st.session_state.retry_prompt
-        # Replace the fallback exchange, rather than duplicating it.
-        if len(st.session_state.messages)>=2 and st.session_state.messages[-2]['content']==prompt:
-            st.session_state.messages = st.session_state.messages[:-2]
-
-# Top-level chat_input uses Streamlit's native bottom composer.
-# Streamlit manages its mobile keyboard and viewport behaviour.
-entered = st.chat_input('Ask FAST a question…', max_chars=4000)
-if entered:
-    prompt = entered
-
-if prompt:
-    st.session_state.pop('retry_prompt', None)
+if is_pending:
     with st.chat_message('user'):
-        st.markdown(prompt)
+        st.markdown(st.session_state.pending_prompt)
+    with st.chat_message('assistant', avatar=str(ROOT/'assets/jlu_icon.svg')):
+        loading = st.empty()
+        loading.markdown(LOADING_HTML, unsafe_allow_html=True)
+        answer_slot = st.empty()
+else:
+    latest = st.session_state.messages[-1] if st.session_state.messages else None
+    if latest and latest['role'] == 'assistant' and needs_guidance(latest):
+        intent = latest.get('intent')
+        if intent == 'score_clarification':
+            choices = SCORE_CHOICES
+            st.caption('Choose a score type')
+        elif intent == 'scholarship':
+            choices = [('Academic scholarships', 'What academic scholarship bands are listed?'),
+                       ('Sports scholarships', 'What sports scholarships are listed?'),
+                       ('Financial assistance', 'What financial assistance is listed?')]
+            st.caption('Choose a scholarship category')
+        elif intent == 'documents':
+            choices = [('Undergraduate (UG)', 'UG admission documents'), ('Postgraduate (PG)', 'PG admission documents')]
+            st.caption('Choose your applicant type')
+        else:
+            choices = TOPIC_CHOICES
+            st.caption('Explore FAST information')
+        columns = st.columns(2)
+        for i, (label, question) in enumerate(choices):
+            if question is None:
+                columns[i % 2].button(label, key=f'guidance_{i}', use_container_width=True, on_click=choose_fees)
+            else:
+                columns[i % 2].button(label, key=f'guidance_{i}', use_container_width=True, on_click=queue_question, args=(question, True))
+        st.link_button('Visit official JLU website ↗', 'https://www.jlu.edu.in/', use_container_width=True)
+        portal = erp_link(get_setting('JLU_ERP_URL', '') or 'https://erp.jlu.edu.in/Login.aspx')
+        if portal:
+            st.link_button('Open student ERP ↗', portal, use_container_width=True)
+
+    needs_course = st.session_state.last_intent in {'program_fee', 'fee_breakdown'} and not st.session_state.programs
+    if st.session_state.get('show_fees', False) or needs_course:
+        st.markdown('### Choose a course')
+        st.caption('Academic fees · 2026–27')
+        courses = list(dict.fromkeys(r['entity'] for r in kb.by_topic['program_fee']))
+        columns = st.columns(2)
+        for i, course in enumerate(courses):
+            question = f'What is the annual fee breakdown for {course} for 2026-27?'
+            columns[i % 2].button(course, key=f'fee_course_{i}', use_container_width=True, on_click=queue_question, args=(question, True))
+
+    if st.session_state.get('retry_prompt'):
+        st.button('Retry last AI explanation', disabled=not key or not model, on_click=queue_question,
+                  args=(st.session_state.retry_prompt, False, True))
+
+# Native bottom composer; callback queues exactly one turn before the next run.
+st.chat_input('Ask FAST a question…', key='chat_prompt', max_chars=4000,
+              disabled=is_pending, on_submit=queue_typed_question)
+
+if st.session_state.turn_sequence:
+    scroll_to_latest(st.session_state.turn_sequence, live=is_pending)
+
+if is_pending:
+    question = st.session_state.pending_prompt
     started = time.perf_counter()
     warning = ''
-    with st.chat_message('assistant', avatar=str(ROOT / 'assets/jlu_icon.svg')):
-        with st.spinner('Preparing your answer…'):
-            result = kb.retrieve(prompt, st.session_state.programs, previous_intent=st.session_state.last_intent)
-            if result.direct_answer:
-                answer = fee_answer(result) or clean_answer(result.direct_answer)
-                mode = 'Dataset answer' if result.records else 'FAST guidance'
-                st.markdown(answer)
-            elif key and model and use_ai:
-                placeholder = st.empty()
+    result = Result('service_error')
+    try:
+        result = kb.retrieve(question, st.session_state.programs, previous_intent=st.session_state.last_intent)
+        if result.direct_answer:
+            answer = fee_answer(result) or clean_answer(result.direct_answer)
+            mode = 'Dataset answer' if result.records else 'FAST guidance'
+        elif key and model and use_ai:
+            try:
+                client = session_client(key)
+                recent = [m['content'] for m in st.session_state.messages if m['role'] == 'user'][-2:]
                 answer = ''
-                try:
-                    client = session_client(key)
-                    recent = [m['content'] for m in st.session_state.messages if m['role']=='user'][-2:]
-                    last_paint = 0.0
-                    for piece in stream_answer(client, model, prompt, result.records, recent, detailed):
-                        answer += piece
-                        now = time.perf_counter()
-                        # Avoid repeatedly parsing Markdown for tiny token updates.
-                        if now - last_paint >= 0.15:
-                            placeholder.markdown(clean_answer(answer) + ' ▌')
-                            last_paint = now
-                    if not answer.strip():
-                        raise ValueError('No text response')
-                    answer = clean_answer(answer)
-                    placeholder.markdown(answer)
-                    st.session_state.verified_connection = connection_id(key, model)
-                    mode = 'Gemini · retrieved evidence'
-                except Exception as error:
-                    # Discard incomplete AI prose; preserve a useful factual fallback.
-                    answer = fee_answer(result) or clean_answer(kb.format_answer(result.intent, result.records, prompt))
-                    placeholder.markdown(answer)
-                    warning = friendly_error(error)
-                    st.session_state.retry_prompt = prompt
-                    mode = 'Dataset fallback'
-            else:
-                answer = fee_answer(result) or clean_answer(kb.format_answer(result.intent, result.records, prompt))
-                mode = 'Dataset answer'
-                st.markdown(answer)
-        save_turn(prompt, answer, result, time.perf_counter()-started, mode, warning)
-        st.rerun()
+                last_paint = 0.0
+                for piece in stream_answer(client, model, question, result.records, recent, detailed):
+                    answer += piece
+                    now = time.perf_counter()
+                    if now - last_paint >= 0.15:
+                        answer_slot.markdown(clean_answer(answer) + ' ▌')
+                        last_paint = now
+                if not answer.strip():
+                    raise ValueError('No text response')
+                answer = clean_answer(answer)
+                st.session_state.verified_connection = connection_id(key, model)
+                mode = 'Gemini · retrieved evidence'
+            except Exception as error:
+                answer = fee_answer(result) or clean_answer(kb.format_answer(result.intent, result.records, question))
+                warning = friendly_error(error)
+                st.session_state.retry_prompt = question
+                mode = 'Dataset fallback'
+        else:
+            answer = fee_answer(result) or clean_answer(kb.format_answer(result.intent, result.records, question))
+            mode = 'Dataset answer'
+    except Exception:
+        answer = 'I couldn’t load the requested information. Please try again, or use the official JLU website.'
+        mode = 'FAST guidance'
+    # Keep the acknowledgement visible even when lookup takes only milliseconds.
+    remaining = MIN_LOADING_SECONDS - (time.perf_counter() - started)
+    if remaining > 0:
+        time.sleep(remaining)
+    loading.empty()
+    answer_slot.markdown(answer)
+    save_turn(question, answer, result, time.perf_counter() - started, mode, warning)
+    st.session_state.pending_prompt = None
+    st.rerun()

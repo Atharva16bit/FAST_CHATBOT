@@ -3,9 +3,9 @@
   "routing_examples": 161,
   "regression_questions": 47,
   "intent_matches": 47,
-  "index_build_ms": 106.957,
-  "retrieval_p50_ms": 1.64,
-  "retrieval_p95_ms": 94.396,
+  "index_build_ms": 27.405,
+  "retrieval_p50_ms": 1.389,
+  "retrieval_p95_ms": 2.457,
   "measured_queries": 470,
   "limitations": "Local timing on this machine only. Questions were used during debugging: this is a regression set, not an unbiased held-out accuracy estimate. No Google API response, first-token latency, concurrency load or generated-answer accuracy was measured.",
   "results": [
@@ -239,7 +239,7 @@
       "expected_intent": "contact",
       "actual_intent": "contact",
       "match": true,
-      "records": 2
+      "records": 1
     },
     {
       "question_id": "Q0120",
@@ -271,7 +271,7 @@
       "expected_intent": "faculty_assignment",
       "actual_intent": "faculty_assignment",
       "match": true,
-      "records": 2
+      "records": 1
     },
     {
       "question_id": "Q0136",
@@ -385,18 +385,5 @@
       "match": true,
       "records": 0
     }
-  ],
-  "final_build": {
-    "automated_tests_passed": 31,
-    "faculty_order": "Project owner requested sequence, starting with HOD",
-    "faculty_email_corrections": "F010, F011 and F013 included",
-    "live_api_test": "Not run; user supplies key locally",
-    "browser_visual_audit": "Not available in build environment"
-  },
-  "deployment_build": {
-    "automated_tests_passed": 34,
-    "managed_secrets": "Supported and mocked tests passed",
-    "public_configuration": "SHOW_API_SETTINGS=false hides visitor API controls",
-    "live_deployment": "Not yet deployed; repository and account setup required"
-  }
+  ]
 }

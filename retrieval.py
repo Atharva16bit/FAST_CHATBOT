@@ -22,10 +22,17 @@ def normalize(text):
         (r'\bb\.?\s*c\.?\s*a\b', 'bca'), (r'\bm\.?\s*c\.?\s*a\b', 'mca'),
         (r'\bcomputer science(?: and engineering)?\b', 'cse'),
         (r'\bartificial intelligence\b', 'ai'), (r'\buser experience\b', 'ux'),
-        (r'\bfull[ -]?stack development\b', 'fullstack'),
+        (r'\bfull[ -]?stack(?: development)?\b', 'fullstack'),
+        (r'\bcloud computing\b', 'cloud'), (r'\bdata science\b', 'datascience'),
+        (r'\bbca ds\b', 'bca datascience'),
+        (r'\bobject[ -]oriented programming\b', 'oop'),
+        (r'\boperating systems?\b', 'os'), (r'\bcomputer networks?\b', 'cn'),
+        (r'\bdesign and analysis of algorithms\b', 'daa'),
         (r'\binternet of things\b', 'iot'),
         (r'\b(database management systems?|dbms)\b', 'dbms'),
-        (r'\bvaishali\b', 'vishali'), (r'\breeshma\b', 'reshma'),
+        (r'\bprogrammes?\b', 'program'), (r'\bprograms\b', 'program'),
+        (r'\bfaculty members\b', 'faculty'), (r'\bfee structure\b', 'fee breakdown'),
+        (r'\bfaculty details\b', 'faculty'), (r'\bvaishali\b', 'vishali'), (r'\breeshma\b', 'reshma'),
     ]:
         text = re.sub(pattern, replacement, text)
     return re.sub(r'[^a-z0-9@]+', ' ', text).strip()
@@ -65,7 +72,8 @@ RULES = [
  ('accreditation', r'accredit|approval documents|program.*approval'),
  ('application_status', r'(my|mera|meri|personal).*(application|admission).*(status|accepted)|applicant dashboard|application number|application status'),
  ('fee_due_date', r'outstanding|pending fee|payment deadline|fee.*(due|calendar)|semester fee.*deadline'),
- ('timetable', r'timetable|class.*(time|baje)|kal meri|exam.*schedule'),
+ ('timetable', r'timetable|class.*(time|baje)|kal meri|exam.*schedule|(?:class|section|semester).*schedule'),
+ ('application_fee', r'application fee|form fee'),
  ('refund', r'refund|withdraw|cancellation|cancel.*admission|get back.*(day|deadline)'),
  ('mess_fee', r'\bmess\b|meal plan'),
  ('hostel_facilities', r'laundry|housekeeping|pool|hostel.*(facilit|wifi|wi fi|gym)'),
@@ -75,36 +83,39 @@ RULES = [
  ('scholarship_process', r'scholarship.*(apply|application|renew|deadline|combine|stack)|apply.*scholarship|scholarships ko combine'),
  ('scholarship', r'scholarship|waiver|sports.*(gold|silver|bronze)|financial assistance'),
  ('campus_visit', r'campus.*(visit|tour)|visit.*campus|guided tour'),
- ('transport', r'bus|transport|pickup|pick up'),
+ ('transport', r'\bbus\b|transport|pickup|pick up'),
  ('placement', r'placement|package|recruiter|graduating batch|average salary'),
  ('live_seats', r'(seat.*(available|availability|remain|vacant))|vacant.*seat'),
  ('live_admission', r'admission.*(open|today|extension)|still apply|after the deadline|next admission cycle|admission cycle|next.*intake'),
  ('seat_booking', r'seat booking|booking amount|booking deadline|pal issuance'),
+ ('refund', r'\b(15|30) days? (before|after).*(admission date|admission deadline|last admission date)'),
  ('admission_dates', r'deadline|application window|application.*(start|begin)|admission date|application date'),
+ ('admission_confirmation', r'provisional|original.*verification|admission.*final|final.*admission|registration.*condition'),
  ('documents', r'document|marksheet|mark sheet|identity|photograph|\bupload\b'),
  ('eligibility', r'eligib|prerequisite|without math|maths ke bina|qualifying subjects|50 percent|scored.*percent'),
  ('entrance_selection', r'entrance|jluet|interview|selection'),
- ('admission_confirmation', r'provisional|original.*verification|admission.*final|final.*admission|registration.*condition'),
  ('seat_booking', r'seat booking|booking amount|booking deadline|pal issuance'),
  ('application_portal', r'application.*(portal|address)|apply online|form ka.*portal'),
  ('application_fee', r'application.*(fee|charge)|form.*fee'),
- ('application_process', r'(apply|application|admission|form).*(step|process|submit|kaise)|how.*apply|after completing.*application'),
+ ('application_process', r'(apply|application|admission|form).*(step|process|submit|kaise)|how.*(apply|application|admission|enrol)|submit.*application|after completing.*application'),
  ('education_loan', r'education loan|lender|loan.*(approv|guidance|guarantee)'),
  ('program_transfer', r'(change|changing|transfer|move|switch).*(program|bca|btech)|program.*(change|transfer)'),
  ('medium_instruction', r'medium.*instruction|teaching language|language policy|english.*teach'),
  ('accreditation', r'accredit|approval|recognition'),
  ('labs', r'\blab\b|\blabs\b|laborator|gpu'),
- ('faculty', r'\bemail\b|staff directory|faculty directory|contact.*(dr|anjali)|head of|heads fast|hod|professor'),
- ('faculty_assignment', r'who.*(teach|teacher)|teacher kaun|faculty course mapping|teach.*(semester|class)|faculty.*subject'),
+ ('faculty_phone', r'(faculty|teacher|professor).*(phone|mobile|number)|(phone|mobile|number).*(faculty|teacher|professor)'),
+ ('faculty', r'faculty.*(email|contact|directory)|staff directory|contact.*(dr|anjali)|head of|heads fast|hod|professor'),
+ ('faculty_assignment', r'who.*(teach|teacher)|\bteacher\b|teacher kaun|faculty course mapping|teach.*(semester|class)|faculty.*subject'),
  ('curriculum', r'credit|curriculum|syllabus|semester allocation|course code'),
  ('student_support', r'portal login|help desk|support.*(contact|desk)|examination office|course registration support|fee receipt'),
- ('contact', r'contact|phone|campus address|admissions.*email|address.*campus'),
+ ('contact', r'contact|phone|\bemail\b|campus address|admissions.*email|address.*campus'),
  ('program_comparison', r'compare|comparison|choose|better|versus|\bvs\b|which.*program.*(me|child)|likes computers'),
  ('fee_breakdown', r'break.*down|breakdown|charges.*separate|total.*include.*admission|tuition.*total|charges.*annual total'),
  ('program_fee', r'fee|tuition|charges|yearly cost|annual cost|fees|cost'),
  ('program_duration', r'duration|how long|how many years|kitne saal'),
+ ('faculty', r'\bfaculty\b(?! of)|\bfaculties\b|\bteaching staff\b|\bteachers\b'),
  ('program_status', r'(robotics|sustainable energy|iot|electronics|bca ai|bca artificial).*(offer|apply|available|confirmed)|currently offered'),
- ('program_info', r'program|degree|undergraduate options|course'),
+ ('program_info', r'program|degree|undergraduate options|course|\b(btech|mtech|bca|mca|school|schools|department|departments)\b'),
  ('campus', r'library|campus|wifi|wi fi|security|books'),
 ]
 
@@ -187,7 +198,12 @@ class KnowledgeBase:
 
     def identify_intent(self, text):
         q = normalize(text)
-        if re.search(r'\b(my|mine|mera|meri|mere|apna|atharva|aarna)\b', q) and re.search(r'\b(score|scores|marks|result|results|cgpa|sgpa|attendance)\b', q) and not (re.search(r'\b\d+(?:\.\d+)?\b', q) and re.search(r'eligib|scholarship|qualify', q)):
+        personal_cue = re.search(r'\b(my|mine|mera|meri|mere|apna)\b', q)
+        named_score = re.fullmatch(r"[a-z]+(?: s)? (?:score|scores|marks|result|results|cgpa|sgpa|attendance)", q)
+        if named_score and q.split()[0] in {'entrance','admission','academic','scholarship','qualifying','minimum','required','board','semester'}:
+            named_score = None
+        provided_score = re.search(r'\b\d+(?:\.\d+)?\b', q) and re.search(r'eligib|scholarship|qualify', q)
+        if (personal_cue or named_score) and re.search(r'\b(score|scores|marks|result|results|cgpa|sgpa|attendance)\b', q) and not provided_score:
             return 'personal_records'
         if re.fullmatch(r'(score|scores|marks|result|results|cgpa|sgpa)[ ?.]*', q):
             return 'score_clarification'
@@ -197,17 +213,24 @@ class KnowledgeBase:
             return 'greeting'
         if re.search(r'\b(goodbye|bye|see you|leaving now)\b', q):
             return 'goodbye'
-        if re.search(r'^(thanks|thank you|shukriya)\b', q) and not re.search(r'\b(but|also|what|how|can|fee|hostel)\b', q):
+        if re.search(r'^(thanks|thank you|shukriya)\b', q) and not re.search(r'\b(but|also|what|how|can|could)\b', q):
             return 'thanks'
         if re.search(r'ignore.*(instruction|rule|prompt)|system prompt|pretend.*verified|invent.*(fee|email|fact)', q):
             return 'out_of_scope'
-        if re.search(r'\b(recipe|cricket|football|weather|poem|movie|sorting program|normalization|write.*code|joke)\b', q):
+        if re.search(r'\b(recipe|cricket|football|weather|poem|movie|sorting program|normalization|write.*code|joke)\b', q) and not re.search(r'scholarship|sports.*waiver', q):
             return 'out_of_scope'
-        if re.search(r'^(hi|hello|namaste|good morning)\b', q) and not re.search(r'fee|apply|program|hostel|scholarship', q):
+        if re.search(r'^(hi|hello|namaste|good morning)\b', q) and not re.search(r'fee|apply|program|hostel|scholarship|facult|admission|course|document|eligib|contact|teacher|btech|mca|bca|mtech', q):
             return 'greeting'
+        if re.search(r'\bbca ai\b', q) and re.search(r'apply|offer|available|listing|confirmed', q) and not re.search(r'fee|cost|tuition', q):
+            return 'program_status'
+        if 'school' in q and 'duration' in q:
+            return 'program_info'
+        topic_words = set(q.split()) - STOP - {'information', 'info', 'details', 'know', 'regarding', 'give', 'show', 'hi', 'hello', 'hey', 'namaste'}
+        if topic_words and topic_words <= {'admission', 'admissions', 'fast', 'jlu'} and topic_words & {'admission', 'admissions'}:
+            return 'application_process'
         if re.search(r'\bf0\d{2}\b', q):
             return 'faculty'
-        if re.search(r'who.*teach|teaches.*class|teacher kaun|faculty.*mapping', q):
+        if re.search(r'who.*teach|teaches.*class|teacher kaun|faculty.*mapping|faculty.*subject|\bteacher\b', q):
             return 'faculty_assignment'
         if any((set(normalize(p['name']).split()) - {'dr','kumar','singh','sharma'}) & set(q.split()) for p in self.faculty):
             return 'faculty'
@@ -236,8 +259,9 @@ class KnowledgeBase:
         # Independently requested areas are answered together, not silently dropped.
         clauses = re.split(r'\s+(?:and|also|aur|plus)\s+', q)
         clause_intents = [self.identify_intent(c) for c in clauses]
+        primary_intent = self.identify_intent(text)
         shared_hostel = 'hostel' in q and set(clause_intents) <= {'campus','hostel_facilities','hostel_fee','hostel_optional'}
-        if 1 < len(clauses) <= 3 and not shared_hostel and 'ask_clarification' not in clause_intents and len(set(clause_intents))>1:
+        if 1 < len(clauses) <= 3 and primary_intent not in {'program_comparison', 'fee_breakdown', 'application_fee', 'program_status'} and not shared_hostel and 'ask_clarification' not in clause_intents and len({TOPICS.get(i, i) for i in clause_intents})>1:
             context = self.resolve_programs(text) or previous_programs
             parts = [self._retrieve(c, context, limit, previous_intent) for c in clauses]
             evidence = {r['record_id']:r for part in parts for r in part.records}
@@ -246,7 +270,9 @@ class KnowledgeBase:
                 for c,part in zip(clauses,parts))
             return Result('multiple_enquiries', list(evidence.values()), answer, context)
         intent = self.identify_intent(text)
-        if intent == 'ask_clarification' and previous_intent in NEED_PROGRAM and re.search(r'\b(btech|mtech|bca|mca)\b', q):
+        if previous_intent in {'documents', 'eligibility'} and re.fullmatch(r'(ug|pg|undergraduate|postgraduate)', q):
+            intent = previous_intent
+        if intent in {'ask_clarification', 'program_info'} and previous_intent in NEED_PROGRAM and re.fullmatch(r'(?:(?:and|what about|how about|aur) )?(?:btech|mtech|bca|mca)(?: [a-z ]+)?', q) and re.search(r'\b(btech|mtech|bca|mca)\b', q):
             intent = previous_intent
         if intent == 'greeting':
             return Result(intent, direct_answer='Hello! I can help with FAST programs, listed fees, admission steps, scholarships, hostel information and faculty. What would you like to know?')
@@ -254,6 +280,8 @@ class KnowledgeBase:
             return Result(intent, direct_answer='You’re welcome. Is there anything else you would like to know about FAST?')
         if intent == 'goodbye':
             return Result(intent, direct_answer='Goodbye! Please confirm current admission details with the university before applying.')
+        if intent == 'faculty_phone':
+            return Result(intent, direct_answer='Faculty phone numbers are not provided in our database. I can share the faculty directory and listed email addresses. For phone enquiries, please use the official university website.')
         if intent == 'personal_records':
             return Result(intent, direct_answer="I couldn’t find this information in our database. Your personal marks, results, CGPA and attendance are not connected to FAST_CHATBOT. Please check your student ERP or contact the university.\n\nI can help explain admission requirements and scholarship criteria, but I can’t view your student account. Please don’t share your password here.")
         if intent == 'score_clarification':
@@ -266,6 +294,8 @@ class KnowledgeBase:
             return Result(intent, direct_answer=NO_DATA[intent])
         topic = TOPICS.get(intent, intent)
         programs = self.resolve_programs(text)
+        if intent == 'program_info' and not programs and not previous_programs and re.search(r'\b(that|this|same) (course|program)\b', q):
+            return Result('ask_clarification', direct_answer='Which course do you mean? Please name the degree and specialization, or choose Programs to see the available courses.')
         explicit_family = bool(re.search(r'\b(btech|mtech|bca|mca)\b', q))
         # Never carry an old program into a request naming a new, unresolved one.
         if not programs and not explicit_family and re.search(r'\b(its|it|that|same|uska|uski|iska|iski|fees|fee|duration)\b', q):
@@ -285,12 +315,17 @@ class KnowledgeBase:
                 return Result(intent, direct_answer='Please specify the specialization for each program, for example B.Tech CSE or BCA General. I will not assume a fee for an unspecified specialization.')
         if intent in NEED_PROGRAM and not programs:
             return Result(intent, direct_answer='Which program do you mean? Please name the degree and specialization, for example B.Tech CSE, B.Tech AI, BCA General or MCA.')
+        mapping_overview = intent == 'faculty_assignment' and (re.search(r'\b(all|list|mapping)\b', q) or set(tokens(text)) <= {'faculty', 'subject', 'subjects', 'course', 'allocation', 'allocations'})
         candidates = list(self.by_topic.get(topic, []))
         if programs and topic in {'program_info', 'program_fee'}:
             candidates = [r for r in candidates if r['entity'] in programs]
         elif topic in {'program_info', 'program_fee'} and explicit_family:
             families = set(re.findall(r'\b(btech|mtech|bca|mca)\b', q))
             candidates = [r for r in candidates if normalize(r['entity']).split()[0] in families]
+        if intent == 'contact' and 'refund' in q:
+            candidates = [r for r in candidates if r['entity'] == 'Refund grievances']
+        if intent == 'contact' and re.search(r'admission|apply|application', q):
+            candidates = [r for r in candidates if r['entity'] == 'Admissions']
         if intent == 'faculty':
             names = []
             for p in self.faculty:
@@ -301,13 +336,26 @@ class KnowledgeBase:
                 candidates = [r for r in candidates if r['entity'] in names]
             elif re.search(r'head|hod', q):
                 candidates = [r for r in candidates if 'F001' in r['answer']]
-            elif not re.search(r'list|directory|all|faculty', q):
+            elif not re.search(r'list|directory|all|faculty|faculties|teachers|teaching staff', q):
                 return Result(intent, direct_answer='Which faculty member do you mean? Please give their name or faculty ID.')
         if intent == 'faculty_assignment':
             ids = [p['faculty_id'] for p in self.faculty if
                 (set(normalize(p['name']).split()) - {'dr','kumar','singh','sharma'}) & set(q.split())]
             if ids:
                 candidates = [r for r in candidates if r['entity'] in ids]
+        if intent == 'faculty_assignment' and not mapping_overview:
+            # Subject keywords on each record contain the teacher's other subjects.
+            # Filter using the actual allocated subject before BM25 ranking.
+            query_terms = set(tokens(text)) - {'who', 'teach', 'teaches', 'teacher', 'teaching', 'faculty', 'subject', 'subjects', 'name', 'kaun', 'sir', 'mam'}
+            subject_scores = []
+            for record in candidates:
+                subject = record['answer'].split('Faculty name:')[0].split(':', 1)[-1]
+                subject_scores.append((len(query_terms & set(tokens(subject))), record))
+            best = max((score for score, _ in subject_scores), default=0)
+            if best:
+                candidates = [record for score, record in subject_scores if score == best]
+            elif not ids:
+                return Result(intent, direct_answer='I couldn’t find that subject allocation in our database. Please name a listed subject or faculty member, for example: Who teaches DBMS?')
         if intent == 'documents':
             applicant = 'PG' if re.search(r'\b(pg|postgraduate|graduation|mca|mtech)\b', q) else ('UG' if re.search(r'\b(ug|undergraduate|btech|bca|class 12)\b', q) else None)
             if applicant:
@@ -347,10 +395,10 @@ class KnowledgeBase:
             candidates.sort(
                 key=lambda r: positions.get(name_to_id.get(r['entity']), 999)
             )
-        if intent=='faculty_assignment':
+        if intent=='faculty_assignment' and not mapping_overview:
             candidates = [r for r in candidates if ranking.get(r['record_id'], 0)>0]
         # Complete overview lists remain compact; ordinary questions use top-k.
-        overview = intent in {'program_info','faculty'} and re.search(r'list|directory|all|which programs|degree programs|undergraduate options', q)
+        overview = (intent == 'faculty') or (intent == 'program_info' and not programs) or mapping_overview
         chosen = candidates if overview else candidates[:limit]
         if not chosen:
             return Result(intent, direct_answer='That information is not available in the connected dataset. Please confirm it with the relevant university office.', programs=programs)
