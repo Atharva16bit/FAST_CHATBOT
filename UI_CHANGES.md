@@ -43,3 +43,15 @@ This section supersedes earlier notes about putting the composer below the title
 - Other unrelated topics use the same scope explanation. Topic-specific missing-information replies retain their specific limitations.
 - Fee amount formatting no longer includes trailing sentence commas.
 - 41 automated tests pass. Physical phone keyboard/viewport behaviour still needs verification after deployment.
+
+## Database fallback and suggested topics
+
+- Missing/unclear questions explicitly state that matching information was not found in the chatbot database.
+- The latest recovery reply offers Programs, Fees, Admissions, Scholarships, Hostel and Faculty buttons. Fees opens the course selector.
+- A bare score/marks question offers entrance, eligibility, scholarship and personal-result clarification choices.
+- Personal marks, CGPA, results and attendance requests explain that student accounts are not connected and point users to their ERP. These answers do not call Gemini.
+- The official website button uses https://www.jlu.edu.in/ (checked 23 October 2026). This is a link, not a live website search.
+- The optional ERP button appears only when JLU_ERP_URL is configured with a confirmed HTTPS address. No ERP URL has been guessed or configured in this release. The button opens the external portal; it does not read student records.
+- Use the bottom composer and loading indicator from the preceding release.
+
+Validation: 47 automated tests pass, including personal records, score clarification, user-provided scholarship marks, topic buttons and URL configuration. Mobile device behaviour still requires a deployed phone check.

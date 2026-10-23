@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from assistant import create_client, stream_answer, friendly_error
 from retrieval import KnowledgeBase
 from presentation import clean_answer, fee_answer
+from guidance import TOPIC_CHOICES, SCORE_CHOICES, needs_guidance, erp_link
 from connection import configured_key, connection_id, verify_connection, get_setting
 
 ROOT = Path(__file__).resolve().parent
@@ -54,7 +55,7 @@ def save_turn(question, answer, result, elapsed, mode, warning=''):
     st.session_state.messages.extend([
         {'role':'user', 'content':question},
         {'role':'assistant', 'content':clean_answer(answer), 'sources':result.records,
-         'seconds':elapsed, 'retrieval_ms':result.retrieval_ms, 'mode':mode,
+         'intent':result.intent, 'seconds':elapsed, 'retrieval_ms':result.retrieval_ms, 'mode':mode,
          'warning':warning}])
     # Keep at most 30 completed exchanges per session.
     st.session_state.messages = st.session_state.messages[-60:]
@@ -153,6 +154,25 @@ for message in st.session_state.messages:
         if message['role']=='assistant':
             if message.get('warning'):
                 st.warning(message['warning'])
+
+# Offer recovery choices below the most recent assistant reply.
+latest = st.session_state.messages[-1] if st.session_state.messages else None
+if latest and latest['role'] == 'assistant' and needs_guidance(latest):
+    score_question = latest.get('intent') == 'score_clarification'
+    choices = SCORE_CHOICES if score_question else TOPIC_CHOICES
+    st.caption('Choose a score type' if score_question else 'Explore FAST information')
+    choice_columns = st.columns(2)
+    for index, (label, question) in enumerate(choices):
+        if choice_columns[index % 2].button(label, key=f'guidance_{index}', use_container_width=True):
+            st.session_state.programs = []
+            if question is None:
+                st.session_state.show_fees = True
+            else:
+                prompt = question
+    st.link_button('Visit official JLU website ↗', 'https://www.jlu.edu.in/', use_container_width=True)
+    portal = erp_link(get_setting('JLU_ERP_URL', ''))
+    if portal:
+        st.link_button('Open student ERP ↗', portal, use_container_width=True)
 
 # Course choices also appear when a typed fee question needs a program.
 needs_course = (st.session_state.last_intent in {'program_fee', 'fee_breakdown'}
