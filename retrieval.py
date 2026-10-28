@@ -97,7 +97,7 @@ RULES = [
  ('seat_booking', r'seat booking|booking amount|booking deadline|pal issuance'),
  ('application_portal', r'application.*(portal|address)|apply online|form ka.*portal'),
  ('application_fee', r'application.*(fee|charge)|form.*fee'),
- ('application_process', r'(apply|application|admission|form).*(step|process|submit|kaise)|how.*(apply|application|admission|enrol)|submit.*application|after completing.*application'),
+('application_process', r'(apply|application|admissions?|form).*(step|process|procedure|submit|kaise)|how.*(apply|application|admissions?|enrol)|submit.*application|after completing.*application|admission.*procedure|procedure.*admission'),
  ('education_loan', r'education loan|lender|loan.*(approv|guidance|guarantee)'),
  ('program_transfer', r'(change|changing|transfer|move|switch).*(program|bca|btech)|program.*(change|transfer)'),
  ('medium_instruction', r'medium.*instruction|teaching language|language policy|english.*teach'),
