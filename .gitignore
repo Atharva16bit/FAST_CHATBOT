@@ -1,0 +1,22 @@
+# Credentials and local secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+# Python environments/cache
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+# Embedding caches and local scratch
+.cache/
+models/
+*.log

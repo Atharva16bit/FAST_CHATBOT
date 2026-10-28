@@ -1,0 +1,85 @@
+:root{--navy:#111e32;--teal:#0788a3;--bg:#f8fafc;--ink:#172335;--muted:#64748b;--border:#dce5ef}
+html,body,[data-testid="stApp"]{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
+[data-testid="stAppViewContainer"]{background:var(--bg)}
+[data-testid="stSidebar"]{background:var(--navy);color:#f1f5f9}
+[data-testid="stSidebar"] *{color:inherit}
+[data-testid="stSidebar"] .stButton button{border:1px solid #4b7185;background:transparent;color:#fff;min-height:43px;border-radius:11px}
+[data-testid="stSidebar"] .stButton button[kind="primary"]{background:var(--teal);border-color:var(--teal);color:#fff}
+[data-testid="stSidebar"] .stCaption, [data-testid="stSidebar"] small{color:#b4c8d7!important}
+[data-testid="stSidebar"] [data-testid="stToggle"] label{color:#fff}
+[data-testid="stSidebar"] a{color:#c8e6ec}
+.block-container{max-width:920px;padding-top:1.5rem;padding-bottom:6rem}
+.jlu-sidebar-label{font-size:0.69rem;font-weight:700;letter-spacing:.14em;color:#afd9e7;margin:1.1rem 0 .3rem}
+.jlu-sidebar-desc{font-size:.94rem;font-weight:600;color:white;margin-bottom:.8rem}
+.jlu-header{display:flex;align-items:center;gap:15px;padding:8px 0 17px;border-bottom:1px solid var(--border);margin-bottom:1rem}
+.jlu-header img{width:46px;height:46px;object-fit:contain;border-radius:13px}
+.jlu-header h1{margin:0;font-size:1.55rem;font-weight:750;letter-spacing:-.03em;line-height:1.15;color:var(--ink)}
+.jlu-header p{font-size:.85rem;color:var(--muted);margin:.32rem 0 0}
+.jlu-hero{padding:30px 22px 22px;border:1px solid var(--border);border-radius:18px;background:#fff;margin:14px 0 20px}
+.jlu-hero h2{font-size:1.56rem;letter-spacing:-.025em;margin:0 0 8px;color:var(--ink)}
+.jlu-hero p{font-size:.95rem;color:var(--muted);margin:0}
+.jlu-notice{font-size:.76rem;color:#526277;background:#f1f5f9;border-radius:9px;padding:9px 12px;margin:12px 0 18px;border:1px solid #e3e9f0}
+[data-testid="stChatMessage"]{border:1px solid #e2e8f0;border-radius:15px;background:#fff;padding:10px 14px;margin:12px 0;box-shadow:0 2px 9px rgba(17,30,50,.025)}
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p{line-height:1.65}
+[data-testid="stChatMessage"] table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse}
+[data-testid="stChatMessage"] th{background:#edf7f9}
+[data-testid="stChatMessage"] td,[data-testid="stChatMessage"] th{padding:10px 12px}
+[data-testid="stChatInput"] textarea{font-size:1rem}
+[data-testid="stChatInput"]{border-radius:14px}
+.stButton button{min-height:43px;border-radius:11px;border-color:#cbdce4}
+.stButton button:hover{border-color:var(--teal);color:var(--teal)}
+.stButton button:focus-visible,button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid #52b8ce!important;outline-offset:2px}
+[data-testid="stAlert"]{border-radius:11px}
+@media(max-width:640px){.block-container{padding:1rem .75rem 5rem}.jlu-header h1{font-size:1.22rem}.jlu-header p{font-size:.75rem}.jlu-hero{padding:18px 15px}.jlu-hero h2{font-size:1.3rem}[data-testid="stChatMessage"]{padding:8px}}
+
+/* Narrow viewport: avoid clipped message content and pinned-input overlap. */
+[data-testid="stChatMessage"]{min-width:0;overflow-wrap:anywhere}
+[data-testid="stChatMessageContent"]{min-width:0;max-width:100%}
+[data-testid="stChatMessage"] table{width:max-content;min-width:min(100%,360px);max-width:100%;font-size:.88rem}
+[data-testid="stChatMessage"] table td,[data-testid="stChatMessage"] table th{white-space:normal;min-width:90px}
+@media (max-width:640px){
+  .block-container{padding:1rem 1rem 8.4rem!important;max-width:100%!important}
+  [data-testid="stChatMessage"]{padding:11px 9px!important;margin:12px 0;border-radius:13px}
+  [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"]{min-width:0}
+  [data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p{line-height:1.55;font-size:.94rem}
+  .jlu-header{gap:10px;align-items:center;flex-wrap:nowrap}
+  .jlu-header img{width:40px;height:40px;flex:none}
+  .jlu-header h1{font-size:1.13rem;overflow-wrap:anywhere}
+  .jlu-header p{font-size:.7rem;line-height:1.35}
+  .jlu-notice{font-size:.75rem;line-height:1.55}
+  [data-testid="stBottom"]{background:var(--bg);padding-bottom:env(safe-area-inset-bottom, 0px)}
+  [data-testid="stBottom"] > div{padding-left:.75rem;padding-right:.75rem}
+  [data-testid="stChatInput"] textarea{font-size:16px!important}
+  [data-testid="stSidebar"]{max-width:min(88vw,340px)!important}
+}
+
+/* Single, even outline around the actual chat composer (not its outer wrapper). */
+[data-testid="stChatInput"] {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 14px !important;
+  background: transparent !important;
+}
+[data-testid="stChatInput"] > div {
+  border: 2px solid #0788a3 !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  outline: none !important;
+  overflow: hidden;
+  transition: border-color .15s ease;
+}
+[data-testid="stChatInput"]:focus-within > div {
+  border-color: #05738b !important;
+  box-shadow: none !important;
+}
+[data-testid="stChatInput"] textarea,
+[data-testid="stChatInput"] textarea:focus,
+[data-testid="stChatInput"] textarea:focus-visible,
+[data-testid="stChatInput"] [data-baseweb="textarea"],
+[data-testid="stChatInput"] [data-baseweb="textarea"]:focus-within {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}

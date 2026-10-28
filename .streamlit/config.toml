@@ -1,0 +1,12 @@
+[theme]
+primaryColor = "#0788A3"
+backgroundColor = "#F8FAFC"
+secondaryBackgroundColor = "#EFF4F7"
+textColor = "#172335"
+
+[client]
+toolbarMode = "minimal"
+
+[server]
+headless = true
+maxUploadSize = 5
