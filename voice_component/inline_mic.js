@@ -1,69 +1,89 @@
-/**
- * FAST_CHATBOT Microphone
- * Streamlit Components V2
- *
- * Features:
- * - Browser speech recognition
- * - Microphone beside send arrow
- * - Red listening state
- * - Processing spinner
- * - Editable transcript preview
- * - Send / Cancel
- */
-
 export default function (component) {
   const { data, parentElement, setTriggerValue } = component;
 
-  const Recognition =
+  const SpeechRecognition =
     window.SpeechRecognition || window.webkitSpeechRecognition;
 
-  const language = data?.language === "hi-IN" ? "hi-IN" : "en-IN";
+  const language = data?.language || "en-IN";
 
   let recognition = null;
-  let listening = false;
-  let disposed = false;
-  let transcript = "";
-  let observer = null;
-  let scheduled = false;
   let state = "idle";
+  let transcript = "";
+  let disposed = false;
+  let scheduled = false;
+  let observer = null;
+  let activeSession = false;
 
-  // Component root
+  // Streamlit component root
   const root = document.createElement("div");
-  root.className = "fast-voice-root";
-
+  root.style.display = "none";
   parentElement.appendChild(root);
 
   // ==========================================================
-  // MICROPHONE STYLES
+  // MICROPHONE BUTTON
+  // ==========================================================
+
+  const button = document.createElement("button");
+
+  button.type = "button";
+  button.className = "fast-mic-button";
+  button.dataset.state = "idle";
+  button.title = "Speak your question";
+  button.setAttribute("aria-label", "Start voice input");
+
+  button.innerHTML = `
+    <svg
+      class="fast-mic-icon"
+      width="19"
+      height="19"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="9" y="2" width="6" height="12" rx="3"/>
+      <path d="M5 10a7 7 0 0 0 14 0"/>
+      <path d="M12 17v5"/>
+      <path d="M8 22h8"/>
+    </svg>
+
+    <span
+      class="fast-mic-spinner"
+      aria-hidden="true"
+    ></span>
+  `;
+
+  // ==========================================================
+  // COMPONENT STYLES
   // ==========================================================
 
   const style = document.createElement("style");
 
   style.textContent = `
-    .fast-voice-control {
-      display: flex;
-      align-items: center;
-      position: relative;
-      flex: 0 0 auto;
-    }
-
     .fast-mic-button {
+      flex: 0 0 36px;
       width: 36px;
       height: 36px;
-      border: 0;
-      border-radius: 10px;
+      padding: 0;
+      margin-right: 4px;
 
       display: inline-flex;
       justify-content: center;
       align-items: center;
 
       background: transparent;
+      border: none;
+      border-radius: 10px;
+
       color: #38556a;
       cursor: pointer;
 
       transition:
-        background-color 0.15s ease,
-        color 0.15s ease,
+        background-color 0.18s ease,
+        color 0.18s ease,
         transform 0.12s ease;
     }
 
@@ -73,8 +93,8 @@ export default function (component) {
     }
 
     .fast-mic-button:active:not(:disabled) {
-      transform: scale(0.95);
       background: #b8dfe8;
+      transform: scale(0.94);
     }
 
     .fast-mic-button:focus:not(:focus-visible) {
@@ -82,7 +102,7 @@ export default function (component) {
     }
 
     .fast-mic-button:focus-visible {
-      outline: 2px solid #0788a3;
+      outline: 2px solid #08788e;
       outline-offset: 2px;
     }
 
@@ -94,26 +114,29 @@ export default function (component) {
     .fast-mic-button[data-state="processing"] {
       background: #e5f4f7;
       color: #08788e;
+      cursor: progress;
     }
 
     .fast-mic-button:disabled {
-      opacity: 0.45;
+      opacity: 0.5;
       cursor: not-allowed;
     }
 
-    /* Animated speech processing loader */
-
     .fast-mic-spinner {
       display: none;
-
       width: 18px;
       height: 18px;
 
-      border: 2px solid #b3dbe5;
+      border: 2px solid #bddde5;
       border-top-color: #08788e;
       border-radius: 50%;
 
-      animation: fast-voice-spin 0.7s linear infinite;
+      animation: fast-mic-spin 0.7s linear infinite;
+    }
+
+    .fast-mic-button[data-state="processing"]
+    .fast-mic-icon {
+      display: none;
     }
 
     .fast-mic-button[data-state="processing"]
@@ -121,108 +144,8 @@ export default function (component) {
       display: block;
     }
 
-    .fast-mic-button[data-state="processing"]
-    .fast-mic-svg {
-      display: none;
-    }
-
-    @keyframes fast-voice-spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* Transcript review popup */
-
-    .fast-voice-review {
-      position: absolute;
-      bottom: calc(100% + 12px);
-      right: -45px;
-
-      width: min(340px, calc(100vw - 32px));
-      padding: 12px;
-
-      border: 1px solid #cbdde5;
-      background: #ffffff;
-      border-radius: 14px;
-
-      box-shadow: 0 8px 28px #10354b22;
-      z-index: 99999;
-
-      display: none;
-      color: #183346;
-    }
-
-    .fast-voice-review.open {
-      display: block;
-    }
-
-    .fast-voice-review label {
-      display: block;
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 7px;
-    }
-
-    .fast-voice-review input {
-      width: 100%;
-      min-width: 0;
-
-      border: 1px solid #a4bac7;
-      border-radius: 8px;
-
-      padding: 9px;
-      font: inherit;
-      font-size: 14px;
-
-      color: #183346;
-      background: #ffffff;
-    }
-
-    .fast-voice-review input:focus {
-      outline: 2px solid #08788e;
-      outline-offset: 1px;
-    }
-
-    .fast-voice-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 7px;
-      margin-top: 9px;
-    }
-
-    .fast-voice-actions button {
-      border-radius: 8px;
-      padding: 7px 12px;
-      cursor: pointer;
-
-      font: inherit;
-      font-size: 12px;
-
-      border: 1px solid #cbdde5;
-      background: #ffffff;
-      color: #183346;
-    }
-
-    .fast-voice-actions button:hover {
-      background: #e5f4f7;
-    }
-
-    .fast-voice-actions .fast-voice-send {
-      background: #08788e;
-      border-color: #08788e;
-      color: #ffffff;
-    }
-
-    .fast-voice-actions .fast-voice-send:hover {
-      background: #075f73;
-      color: #ffffff;
-    }
-
-    .fast-voice-status {
-      font-size: 11px;
-      margin-top: 7px;
-      color: #647888;
+    @keyframes fast-mic-spin {
+      to { transform: rotate(360deg); }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -235,142 +158,62 @@ export default function (component) {
   document.head.appendChild(style);
 
   // ==========================================================
-  // MICROPHONE BUTTON AND TRANSCRIPT REVIEW
+  // MICROPHONE STATE
   // ==========================================================
 
-  const control = document.createElement("div");
+  function setState(nextState) {
+    state = nextState;
+    button.dataset.state = nextState;
 
-  control.className = "fast-voice-control";
-
-  control.innerHTML = `
-    <button
-      type="button"
-      class="fast-mic-button"
-      aria-label="Start voice input"
-      title="Speak your question"
-      data-state="idle"
-    >
-      <svg
-        class="fast-mic-svg"
-        width="19"
-        height="19"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
-      >
-        <rect x="9" y="2" width="6" height="12" rx="3"/>
-        <path d="M5 10a7 7 0 0 0 14 0"/>
-        <path d="M12 17v5"/>
-        <path d="M8 22h8"/>
-      </svg>
-
-      <span class="fast-mic-spinner" aria-hidden="true"></span>
-    </button>
-
-    <div
-      class="fast-voice-review"
-      role="group"
-      aria-label="Review voice transcript"
-    >
-      <label for="fast-voice-transcript">
-        Check your question before sending
-      </label>
-
-      <input
-        id="fast-voice-transcript"
-        maxlength="2000"
-        autocomplete="off"
-      />
-
-      <div class="fast-voice-status">
-        Correct any recognition mistakes, then send.
-      </div>
-
-      <div class="fast-voice-actions">
-        <button type="button" class="fast-voice-cancel">
-          Cancel
-        </button>
-
-        <button type="button" class="fast-voice-send">
-          Send
-        </button>
-      </div>
-    </div>
-  `;
-
-  root.appendChild(control);
-
-  const button = control.querySelector(".fast-mic-button");
-  const review = control.querySelector(".fast-voice-review");
-  const input = control.querySelector(".fast-voice-review input");
-  const cancel = control.querySelector(".fast-voice-cancel");
-  const send = control.querySelector(".fast-voice-send");
-
-  // ==========================================================
-  // BUTTON STATES
-  // ==========================================================
-
-  function setState(next) {
-    state = next;
-
-    button.dataset.state = next;
-
-    button.setAttribute("aria-busy", next === "processing" ? "true" : "false");
+    button.disabled = nextState === "processing" || !SpeechRecognition;
 
     button.setAttribute(
-      "aria-label",
-      next === "listening"
-        ? "Stop voice input"
-        : next === "processing"
-          ? "Processing speech"
-          : "Start voice input",
+      "aria-busy",
+      nextState === "processing" ? "true" : "false",
     );
 
-    button.title =
-      next === "listening"
-        ? "Stop listening"
-        : next === "processing"
-          ? "Processing speech..."
-          : "Speak your question";
+    const labels = {
+      idle: "Start voice input",
+      listening: "Stop voice input",
+      processing: "Processing speech",
+    };
 
-    button.disabled = next === "processing" || !Recognition;
+    button.setAttribute("aria-label", labels[nextState] || labels.idle);
+
+    button.title = labels[nextState] || labels.idle;
   }
 
   // ==========================================================
-  // POSITION BESIDE STREAMLIT SEND ARROW
+  // POSITION MICROPHONE BEFORE SEND ARROW
   // ==========================================================
 
-  function placeMic() {
+  function positionMic() {
     if (disposed) return;
 
-    const submit = document.querySelector(
+    const sendContainer = document.querySelector(
       '[data-testid="stChatInputSubmitButton"]',
     );
 
-    if (!submit?.parentElement) return;
+    if (!sendContainer?.parentElement) return;
+
+    const actionRow = sendContainer.parentElement;
 
     if (
-      control.parentElement !== submit.parentElement ||
-      control.nextElementSibling !== submit
+      button.parentElement !== actionRow ||
+      button.nextElementSibling !== sendContainer
     ) {
-      submit.parentElement.insertBefore(control, submit);
+      actionRow.insertBefore(button, sendContainer);
     }
   }
 
-  // Reattach the mic when Streamlit rerenders its composer.
-
   observer = new MutationObserver(() => {
-    if (scheduled || disposed) return;
+    if (disposed || scheduled) return;
 
     scheduled = true;
 
     requestAnimationFrame(() => {
       scheduled = false;
-      placeMic();
+      positionMic();
     });
   });
 
@@ -379,58 +222,14 @@ export default function (component) {
     subtree: true,
   });
 
-  placeMic();
-
-  // ==========================================================
-  // TRANSCRIPT REVIEW
-  // ==========================================================
-
-  function closeReview() {
-    review.classList.remove("open");
-    input.value = "";
-    setState("idle");
-  }
-
-  function showReview(text) {
-    const cleaned = text.replace(/\s+/g, " ").trim();
-
-    if (!cleaned) {
-      setState("idle");
-      return;
-    }
-
-    input.value = cleaned;
-
-    review.classList.add("open");
-    setState("idle");
-
-    input.focus();
-    input.select();
-  }
-
-  function submitText() {
-    const text = input.value.replace(/\s+/g, " ").trim();
-
-    if (!text || text.length > 2000) return;
-
-    closeReview();
-
-    // Send the corrected transcript into app.py.
-    setTriggerValue("voice", {
-      id:
-        typeof crypto.randomUUID === "function"
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random()}`,
-      transcript: text,
-    });
-  }
+  positionMic();
 
   // ==========================================================
   // SPEECH RECOGNITION
   // ==========================================================
 
-  if (Recognition) {
-    recognition = new Recognition();
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
 
     recognition.lang = language;
     recognition.continuous = false;
@@ -440,9 +239,8 @@ export default function (component) {
     recognition.onstart = () => {
       if (disposed) return;
 
-      listening = true;
+      activeSession = true;
       transcript = "";
-
       setState("listening");
     };
 
@@ -450,8 +248,10 @@ export default function (component) {
       if (disposed) return;
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal && event.results[i][0]?.transcript) {
-          transcript += event.results[i][0].transcript + " ";
+        const result = event.results[i];
+
+        if (result.isFinal && result[0]?.transcript) {
+          transcript += result[0].transcript + " ";
         }
       }
 
@@ -461,43 +261,53 @@ export default function (component) {
     recognition.onerror = (event) => {
       if (disposed) return;
 
-      listening = false;
-      transcript = "";
+      console.warn("[FAST_CHATBOT microphone]", event.error);
 
+      activeSession = false;
+      transcript = "";
       setState("idle");
 
-      console.warn("FAST voice recognition:", event.error);
-
-      button.title = `Speech error: ${event.error}`;
+      button.title = `Speech recognition error: ${event.error}`;
     };
 
     recognition.onend = () => {
       if (disposed) return;
 
-      listening = false;
+      activeSession = false;
 
-      const final = transcript;
+      const finalText = transcript.replace(/\s+/g, " ").trim();
+
       transcript = "";
+      setState("idle");
 
-      showReview(final);
+      if (!finalText || finalText.length > 2000) return;
+
+      // Prefills the native Streamlit chat input in app.py.
+      // It does not submit the question automatically.
+      setTriggerValue("voice", {
+        id:
+          typeof crypto.randomUUID === "function"
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random()}`,
+        transcript: finalText,
+      });
     };
   } else {
-    button.title = "Speech recognition is unsupported in this browser";
-
     setState("idle");
+    button.title = "Speech recognition unsupported";
   }
 
   // ==========================================================
-  // EVENT HANDLERS
+  // CLICK HANDLER
   // ==========================================================
 
-  function handleMicClick(event) {
+  function handleClick(event) {
     event.preventDefault();
     event.stopPropagation();
 
     if (!recognition || disposed) return;
 
-    if (listening) {
+    if (activeSession) {
       setState("processing");
       recognition.stop();
       return;
@@ -505,56 +315,27 @@ export default function (component) {
 
     if (state === "processing") return;
 
-    closeReview();
-
     try {
+      transcript = "";
       recognition.start();
     } catch (error) {
+      console.error("[FAST_CHATBOT microphone]", error);
       setState("idle");
-      console.error("Microphone start failed", error);
     }
   }
 
-  function handleCancel(event) {
-    event.preventDefault();
-    closeReview();
-  }
-
-  function handleSend(event) {
-    event.preventDefault();
-    submitText();
-  }
-
-  function handleKey(event) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      submitText();
-    }
-
-    if (event.key === "Escape") {
-      event.preventDefault();
-      closeReview();
-    }
-  }
-
-  button.addEventListener("click", handleMicClick);
-  cancel.addEventListener("click", handleCancel);
-  send.addEventListener("click", handleSend);
-  input.addEventListener("keydown", handleKey);
+  button.addEventListener("click", handleClick);
 
   // ==========================================================
-  // COMPONENT CLEANUP
+  // CLEANUP
   // ==========================================================
 
   return () => {
     disposed = true;
 
-    observer.disconnect();
+    if (observer) observer.disconnect();
 
-    button.removeEventListener("click", handleMicClick);
-    cancel.removeEventListener("click", handleCancel);
-    send.removeEventListener("click", handleSend);
-    input.removeEventListener("keydown", handleKey);
+    button.removeEventListener("click", handleClick);
 
     if (recognition) {
       recognition.onstart = null;
@@ -569,8 +350,8 @@ export default function (component) {
       }
     }
 
-    control.remove();
-    root.remove();
+    button.remove();
     style.remove();
+    root.remove();
   };
 }

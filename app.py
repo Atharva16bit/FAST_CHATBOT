@@ -1,10 +1,11 @@
 
-"""FAST_CHATBOT: Streamlit university assistant with browser voice input."""
+"""FAST_CHATBOT — JLU Faculty of Science & Technology assistant."""
 
 import base64
 import logging
 import os
 import re
+from html import escape
 from pathlib import Path
 
 import streamlit as st
@@ -14,13 +15,21 @@ from assistant import create_client, friendly_error, stream_answer
 from presentation import display_answer
 from retrieval import KnowledgeBase, normalize
 
+
+# ============================================================
+# 1. CONFIGURATION
+# ============================================================
+
 ROOT = Path(__file__).resolve().parent
 load_dotenv(ROOT / ".env")
 
-ICON = ROOT / "assets/jlu_icon.png"
-WORDMARK = ROOT / "assets/jlu_wordmark_reference.png"
-FAVICON = ROOT / "assets/favicon.ico"
-VOICE_JS = ROOT / "voice_component/inline_mic.js"
+ICON = ROOT / "assets" / "jlu_icon.png"
+WORDMARK = ROOT / "assets" / "jlu_wordmark_reference.png"
+FAVICON = ROOT / "assets" / "favicon.ico"
+VOICE_JS = ROOT / "voice_component" / "inline_mic.js"
+CSS = ROOT / "style.css"
+
+LOGGER = logging.getLogger(__name__)
 
 st.set_page_config(
     page_title="FAST_CHATBOT | JLU",
@@ -29,52 +38,58 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-css_path = ROOT / "style.css"
-
-if css_path.is_file():
+if CSS.is_file():
     st.markdown(
-        f"<style>{css_path.read_text(encoding='utf-8')}</style>",
+        f"<style>{CSS.read_text(encoding='utf-8')}</style>",
         unsafe_allow_html=True,
     )
 
 
 # ============================================================
-# UTILITIES
+# 2. KNOWLEDGE BASE
 # ============================================================
 
 def image_uri(path: Path) -> str:
+    """Convert a local PNG file into a browser data URI."""
+
     if not path.is_file():
         return ""
 
-    payload = base64.b64encode(path.read_bytes()).decode("ascii")
-    return f"data:image/png;base64,{payload}"
+    encoded = base64.b64encode(
+        path.read_bytes()
+    ).decode("ascii")
+
+    return f"data:image/png;base64,{encoded}"
 
 
 @st.cache_resource(show_spinner="Loading FAST knowledge base…")
-def load_kb(version):
+def load_knowledge_base(version):
     return KnowledgeBase(ROOT / "data")
 
 
 try:
-    dependencies = [
-        ROOT / "data/knowledge.jsonl",
-        ROOT / "data/intent_examples.jsonl",
-        ROOT / "data/faculty_directory.jsonl",
+    dependency_files = [
+        ROOT / "data" / "knowledge.jsonl",
+        ROOT / "data" / "intent_examples.jsonl",
+        ROOT / "data" / "faculty_directory.jsonl",
         ROOT / "retrieval.py",
         ROOT / "semantic_retrieval.py",
     ]
 
-    kb = load_kb(
-        tuple(path.stat().st_mtime_ns for path in dependencies)
+    version = tuple(
+        file.stat().st_mtime_ns
+        for file in dependency_files
     )
 
+    kb = load_knowledge_base(version)
+
 except (OSError, ValueError, KeyError) as error:
-    st.error(f"Cannot load FAST knowledge base: {error}")
+    st.error(f"Could not load FAST knowledge base: {error}")
     st.stop()
 
 
 # ============================================================
-# SESSION STATE
+# 3. SESSION STATE
 # ============================================================
 
 DEFAULT_STATE = {
@@ -86,25 +101,31 @@ DEFAULT_STATE = {
     "voice_last_event": None,
 }
 
-for name, value in DEFAULT_STATE.items():
+for name, initial in DEFAULT_STATE.items():
     if name not in st.session_state:
         st.session_state[name] = (
-            value.copy()
-            if isinstance(value, list)
-            else value
+            initial.copy()
+            if isinstance(initial, list)
+            else initial
         )
 
 
 def reset_chat():
-    for name, value in DEFAULT_STATE.items():
+    """Reset messages, context and chat composer."""
+
+    for name, initial in DEFAULT_STATE.items():
         st.session_state[name] = (
-            value.copy()
-            if isinstance(value, list)
-            else value
+            initial.copy()
+            if isinstance(initial, list)
+            else initial
         )
+
+    st.session_state["fast_chat_prompt"] = ""
 
 
 def queue_prompt(text):
+    """Receive a question from sidebar or quick-action button."""
+
     if (
         isinstance(text, str)
         and text.strip()
@@ -113,12 +134,14 @@ def queue_prompt(text):
         st.session_state.queued_prompt = text.strip()
 
 
-def valid_voice_event(payload):
+def validate_voice_event(payload):
+    """Validate a transcript received from the JavaScript microphone."""
+
     if not isinstance(payload, dict):
         return None
 
     event_id = payload.get("id")
-    text = payload.get("transcript")
+    transcript = payload.get("transcript")
 
     if not isinstance(event_id, str):
         return None
@@ -126,22 +149,24 @@ def valid_voice_event(payload):
     if not 1 <= len(event_id) <= 100:
         return None
 
-    if not isinstance(text, str):
+    if not isinstance(transcript, str):
         return None
 
-    text = " ".join(text.split())
+    transcript = " ".join(transcript.split())
 
-    if not 0 < len(text) <= 2000:
+    if not 0 < len(transcript) <= 2000:
         return None
 
-    return event_id, text
+    return event_id, transcript
 
 
 # ============================================================
-# ENVIRONMENT / GEMINI
+# 4. GEMINI CONFIGURATION
 # ============================================================
 
-def setting(name, default=""):
+def app_setting(name, default=""):
+    """Read local environment variables or Streamlit secrets."""
+
     from_env = os.getenv(name, "").strip()
 
     if from_env:
@@ -154,44 +179,71 @@ def setting(name, default=""):
         return default
 
 
-GEMINI_KEY = setting("GEMINI_API_KEY")
-GEMINI_MODEL = setting(
+GEMINI_KEY = app_setting("GEMINI_API_KEY")
+
+GEMINI_MODEL = app_setting(
     "GEMINI_MODEL",
     "gemini-2.5-flash",
 )
 
 
 # ============================================================
-# CHAT DISPLAY — USER RIGHT / ASSISTANT LEFT
+# 5. CHAT MESSAGE RENDERING
 # ============================================================
 
 def show_message(message):
-    is_user = message["role"] == "user"
+    """
+    Student: compact content-sized bubble on the RIGHT.
+    Assistant: standard evidence-capable message on the LEFT.
+    """
 
-    alignment = "right" if is_user else "left"
+    role = message["role"]
+    content = str(message["content"])
 
-    avatar = (
-        "👤"
-        if is_user or not ICON.is_file()
-        else str(ICON)
-    )
+    if role == "user":
 
-    with st.container(horizontal_alignment=alignment):
-        with st.chat_message(
-            "user" if is_user else "assistant",
-            avatar=avatar,
-            width="content" if is_user else "stretch",
-        ):
-            st.markdown(message["content"])
+        # Escape HTML so users cannot inject markup or scripts.
+        safe_text = escape(
+            content,
+            quote=True,
+        ).replace("\n", "<br>")
 
-            if not is_user and message.get("sources"):
-                with st.expander("Evidence sources"):
-                    for source in message["sources"]:
-                        st.caption(source)
+        st.markdown(
+            f"""
+            <div class="fast-user-row">
+                <div class="fast-user-bubble">
+                    <span class="fast-user-text">{safe_text}</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        return
+
+    # Assistant keeps native Streamlit chat formatting.
+    with st.chat_message(
+        "assistant",
+        avatar=(
+            str(ICON)
+            if ICON.is_file()
+            else "💬"
+        ),
+        width="stretch",
+    ):
+
+        st.markdown(content)
+
+        if message.get("sources"):
+
+            with st.expander("Evidence sources"):
+
+                for source in message["sources"]:
+                    st.caption(source)
 
 
 # ============================================================
-# SIDEBAR
+# 6. SIDEBAR
 # ============================================================
 
 with st.sidebar:
@@ -221,39 +273,23 @@ with st.sidebar:
     )
 
     st.divider()
+
     st.markdown("**Explore topics**")
 
     topics = [
-        (
-            "Admissions",
-            "How do I apply for admission?",
-        ),
-        (
-            "Programs",
-            "Which programs are listed under FAST?",
-        ),
-        (
-            "Fees",
-            "What are the annual fees for B.Tech CSE?",
-        ),
-        (
-            "Scholarships",
-            "What academic scholarships are listed?",
-        ),
-        (
-            "Hostel",
-            "What hostel room charges are listed?",
-        ),
-        (
-            "Faculty",
-            "List the faculty directory.",
-        ),
+        ("Admissions", "How do I apply for admission?"),
+        ("Programs", "Which programs are listed under FAST?"),
+        ("Fees", "What are the annual fees for B.Tech CSE?"),
+        ("Scholarships", "What academic scholarships are listed?"),
+        ("Hostel", "What hostel room charges are listed?"),
+        ("Faculty", "List the faculty directory."),
     ]
 
     for name, question in topics:
+
         st.button(
             name,
-            key=f"topic_{name}",
+            key=f"topic_{name.lower()}",
             use_container_width=True,
             on_click=queue_prompt,
             args=(question,),
@@ -261,27 +297,36 @@ with st.sidebar:
 
     st.divider()
 
-    voice_language = st.selectbox(
+    # Always-visible voice language choice.
+    voice_language = st.radio(
         "Voice recognition language",
-        ["en-IN", "hi-IN"],
+        options=["en-IN", "hi-IN"],
+        index=0,
         key="voice_language",
-        format_func=lambda lang: (
-            "English (India)"
-            if lang == "en-IN"
-            else "Hindi (India)"
-        ),
+        horizontal=True,
+        format_func=lambda code: {
+            "en-IN": "English",
+            "hi-IN": "Hindi",
+        }[code],
     )
 
     st.caption(
-        "Review and edit recognized speech before sending it."
+        "Use the microphone to fill the chat bar. "
+        "Correct the recognized text before sending."
     )
 
-    with st.expander("Advanced settings"):
+    # Optional Gemini.
+    with st.expander(
+        "Advanced settings",
+        expanded=False,
+    ):
 
         enable_ai = st.toggle(
             "Use Gemini for explanations",
+            value=False,
             disabled=not bool(GEMINI_KEY),
-            help="Requires GEMINI_API_KEY",
+            key="enable_gemini",
+            help="Requires a configured Gemini API key.",
         )
 
         st.caption(
@@ -293,20 +338,21 @@ with st.sidebar:
             )
         )
 
+    # Download conversation.
     if st.session_state.messages:
 
         conversation = "\n\n".join(
-            f"{message['role'].upper()}: "
-            f"{message['content']}"
-            for message in st.session_state.messages
+            f"{item['role'].upper()}: {item['content']}"
+            for item in st.session_state.messages
         )
 
         st.download_button(
             "Download conversation",
-            conversation,
+            data=conversation,
             file_name="FAST_CHATBOT-conversation.txt",
             mime="text/plain",
             use_container_width=True,
+            key="download_conversation",
         )
 
     st.caption(
@@ -321,13 +367,21 @@ with st.sidebar:
 
 
 # ============================================================
-# HEADER
+# 7. HEADER
 # ============================================================
 
+icon_url = image_uri(ICON)
+
+icon_html = (
+    f'<img alt="JLU emblem" src="{icon_url}">'
+    if icon_url
+    else ""
+)
+
 st.markdown(
-    f'<header class="jlu-header">'
-    f'<img alt="JLU emblem" src="{image_uri(ICON)}">'
-    '<div>'
+    '<header class="jlu-header">'
+    + icon_html
+    + '<div>'
     '<h1>FAST_CHATBOT</h1>'
     '<p>Faculty of Science & Technology'
     ' · Jagran Lakecity University</p>'
@@ -348,7 +402,7 @@ st.markdown(
 
 
 # ============================================================
-# WELCOME SCREEN
+# 8. WELCOME SCREEN
 # ============================================================
 
 if not st.session_state.messages:
@@ -363,29 +417,18 @@ if not st.session_state.messages:
     )
 
     suggestions = [
-        (
-            "Admission steps",
-            "How do I apply for admission?",
-        ),
-        (
-            "Explore programs",
-            "Which programs are listed under FAST?",
-        ),
-        (
-            "B.Tech CSE fees",
-            "What are the fees for B.Tech CSE?",
-        ),
-        (
-            "Faculty directory",
-            "List the faculty directory.",
-        ),
+        ("Admission steps", "How do I apply for admission?"),
+        ("Explore programs", "Which programs are listed under FAST?"),
+        ("B.Tech CSE fees", "What are the fees for B.Tech CSE?"),
+        ("Faculty directory", "List the faculty directory."),
     ]
 
-    cols = st.columns(2)
+    columns = st.columns(2)
 
-    for index, (name, question) in enumerate(suggestions):
-        cols[index % 2].button(
-            name,
+    for index, (label, question) in enumerate(suggestions):
+
+        columns[index % 2].button(
+            label,
             key=f"quick_{index}",
             use_container_width=True,
             on_click=queue_prompt,
@@ -394,7 +437,7 @@ if not st.session_state.messages:
 
 
 # ============================================================
-# EXISTING CHAT HISTORY
+# 9. DISPLAY PREVIOUS CONVERSATION
 # ============================================================
 
 for message in st.session_state.messages:
@@ -402,64 +445,73 @@ for message in st.session_state.messages:
 
 
 # ============================================================
-# JAVASCRIPT MICROPHONE
+# 10. JAVASCRIPT MICROPHONE
 # ============================================================
 
 if VOICE_JS.is_file():
 
     js_code = VOICE_JS.read_text(encoding="utf-8")
 
-    if (
-        re.search(r"\bexport\s+default\b", js_code)
-        and hasattr(st.components, "v2")
-    ):
+    if not hasattr(st.components, "v2"):
 
-        voice_component = st.components.v2.component(
+        st.sidebar.warning(
+            "Microphone requires Streamlit Components V2."
+        )
+
+    elif not re.search(r"\bexport\s+default\b", js_code):
+
+        st.sidebar.warning(
+            "Microphone JavaScript needs a default export."
+        )
+
+    else:
+
+        microphone = st.components.v2.component(
             "fast_inline_microphone",
             js=js_code,
             isolate_styles=False,
         )
 
-        voice_result = voice_component(
+        voice_result = microphone(
             key="fast_mic",
-            data={"language": voice_language},
+            data={
+                "language": voice_language,
+            },
             on_voice_change=lambda: None,
         )
 
-        voice_event = valid_voice_event(
+        event = validate_voice_event(
             getattr(voice_result, "voice", None)
         )
 
-        if voice_event is not None:
+        if event is not None:
 
-            event_id, transcript = voice_event
+            event_id, recognized_text = event
 
-            if (
-                event_id
-                != st.session_state.voice_last_event
-            ):
+            if event_id != st.session_state.voice_last_event:
 
                 st.session_state.voice_last_event = event_id
 
-                queue_prompt(transcript)
-
-    else:
-        st.sidebar.warning(
-            "Voice JavaScript must use Streamlit Components V2."
-        )
+                # Prefill the native chat bar.
+                # Voice input does not auto-submit.
+                st.session_state[
+                    "fast_chat_prompt"
+                ] = recognized_text
 
 else:
-    st.sidebar.info(
-        "Voice component not installed; typed chat is available."
+
+    st.sidebar.caption(
+        "Voice input unavailable; typing still works."
     )
 
 
 # ============================================================
-# CHAT INPUT
+# 11. NATIVE CHAT INPUT
 # ============================================================
 
 prompt = st.chat_input(
     "Ask about admissions, fees, courses or hostel…",
+    key="fast_chat_prompt",
     max_chars=2000,
 )
 
@@ -467,13 +519,14 @@ question = st.session_state.queued_prompt or prompt
 
 
 # ============================================================
-# PROCESS QUESTION
+# 12. PROCESS QUESTION
 # ============================================================
 
 if question:
 
     st.session_state.queued_prompt = None
 
+    # Store user's question.
     st.session_state.messages.append(
         {
             "role": "user",
@@ -481,7 +534,7 @@ if question:
         }
     )
 
-    # Student message goes RIGHT
+    # Display compact user bubble on the RIGHT.
     show_message(
         {
             "role": "user",
@@ -489,174 +542,205 @@ if question:
         }
     )
 
-    # FAST_CHATBOT answer goes LEFT
-    with st.container(horizontal_alignment="left"):
+    shown = ""
+    references = []
 
-        with st.chat_message(
-            "assistant",
-            avatar=(
-                str(ICON)
-                if ICON.is_file()
-                else "💬"
-            ),
-            width="stretch",
+    # Display chatbot answer on the LEFT.
+    with st.chat_message(
+        "assistant",
+        avatar=(
+            str(ICON)
+            if ICON.is_file()
+            else "💬"
+        ),
+        width="stretch",
+    ):
+
+        with st.spinner(
+            "Checking the FAST knowledge base…"
         ):
 
-            with st.spinner(
-                "Checking the FAST knowledge base…"
-            ):
+            try:
 
-                shown = ""
-                refs = []
+                query = question
+                normalized = normalize(question)
 
-                try:
-                    query = question
-                    norm = normalize(question)
+                # --------------------------------------------
+                # Conversational context
+                # --------------------------------------------
 
-                    # Handle short contextual follow-ups
+                if (
+                    st.session_state.pending_family
+                    and st.session_state.last_intent
+                    in {
+                        "program_fee",
+                        "fee_breakdown",
+                        "program_duration",
+                    }
+                    and re.fullmatch(
+                        r"(?:cse|ai|datascience|data science|"
+                        r"general|fullstack|cloud)",
+                        normalized,
+                    )
+                ):
+
+                    query = (
+                        f"{st.session_state.pending_family} "
+                        f"{question}"
+                    )
+
+                # --------------------------------------------
+                # Retrieve relevant knowledge
+                # --------------------------------------------
+
+                result = kb.retrieve(
+                    query,
+                    st.session_state.programs,
+                    previous_intent=(
+                        st.session_state.last_intent
+                    ),
+                )
+
+                family = re.search(
+                    r"\b(btech|bca|mtech|mca)\b",
+                    normalized,
+                )
+
+                st.session_state.pending_family = (
+                    family.group(1)
                     if (
-                        st.session_state.pending_family
-                        and st.session_state.last_intent
+                        family
+                        and result.intent
                         in {
                             "program_fee",
                             "fee_breakdown",
                             "program_duration",
                         }
-                        and re.fullmatch(
-                            r"(?:cse|ai|datascience|data science|"
-                            r"general|fullstack|cloud)",
-                            norm,
-                        )
-                    ):
-
-                        query = (
-                            f"{st.session_state.pending_family} "
-                            f"{question}"
-                        )
-
-                    result = kb.retrieve(
-                        query,
-                        st.session_state.programs,
-                        previous_intent=(
-                            st.session_state.last_intent
-                        ),
+                        and not result.records
                     )
+                    else ""
+                )
 
-                    family = re.search(
-                        r"\b(btech|bca|mtech|mca)\b",
-                        norm,
-                    )
+                # --------------------------------------------
+                # Evidence-based answer
+                # --------------------------------------------
 
-                    st.session_state.pending_family = (
-                        family.group(1)
-                        if (
-                            family
-                            and result.intent
-                            in {
-                                "program_fee",
-                                "fee_breakdown",
-                                "program_duration",
-                            }
-                            and not result.records
-                        )
-                        else ""
-                    )
-
-                    answer = (
-                        result.direct_answer
-                        or kb.format_answer(
-                            result.intent,
-                            result.records,
-                            query,
-                        )
-                    )
-
-                    # Optional Gemini explanation
-                    if (
-                        enable_ai
-                        and GEMINI_KEY
-                        and result.records
-                        and not result.direct_answer
-                    ):
-
-                        try:
-
-                            previous = [
-                                item["content"]
-                                for item
-                                in st.session_state.messages
-                                if item["role"] == "user"
-                            ][-3:-1]
-
-                            generated = "".join(
-                                stream_answer(
-                                    create_client(GEMINI_KEY),
-                                    GEMINI_MODEL,
-                                    question,
-                                    result.records,
-                                    previous,
-                                )
-                            )
-
-                            if generated.strip():
-                                answer = generated
-
-                        except Exception as error:
-
-                            st.warning(
-                                f"{friendly_error(error)} "
-                                "Showing the dataset answer instead."
-                            )
-
-                    shown = display_answer(
-                        answer,
+                answer = (
+                    result.direct_answer
+                    or kb.format_answer(
                         result.intent,
                         result.records,
+                        query,
                     )
+                )
 
-                    refs = [
-                        f"{record.get('source_refs', 'Source unspecified')}"
-                        f" · {record.get('academic_year', '')}"
-                        for record in result.records
-                    ]
+                # --------------------------------------------
+                # Optional Gemini explanation
+                # --------------------------------------------
 
-                    st.markdown(shown)
+                if (
+                    enable_ai
+                    and GEMINI_KEY
+                    and result.records
+                    and not result.direct_answer
+                ):
 
-                    if refs:
-                        with st.expander("Evidence sources"):
-                            for source in refs:
-                                st.caption(source)
+                    try:
 
-                    if result.programs:
-                        st.session_state.programs = result.programs
+                        previous_questions = [
+                            item["content"]
+                            for item
+                            in st.session_state.messages
+                            if item["role"] == "user"
+                        ][-3:-1]
 
-                    if result.intent not in (
-                        "greeting",
-                        "thanks",
-                    ):
-                        st.session_state.last_intent = (
-                            result.intent
+                        generated = "".join(
+                            stream_answer(
+                                create_client(GEMINI_KEY),
+                                GEMINI_MODEL,
+                                question,
+                                result.records,
+                                previous_questions,
+                            )
                         )
 
-                except Exception:
+                        if generated.strip():
+                            answer = generated
 
-                    logging.getLogger(__name__).exception(
-                        "FAST_CHATBOT response failed"
+                    except Exception as error:
+
+                        LOGGER.warning(
+                            "Gemini explanation failed: %s",
+                            error,
+                        )
+
+                        st.warning(
+                            f"{friendly_error(error)} "
+                            "Showing the dataset answer instead."
+                        )
+
+                # --------------------------------------------
+                # Format response
+                # --------------------------------------------
+
+                shown = display_answer(
+                    answer,
+                    result.intent,
+                    result.records,
+                )
+
+                references = [
+                    (
+                        f"{record.get('source_refs', 'Source unspecified')}"
+                        f" · {record.get('academic_year', '')}"
+                    )
+                    for record in result.records
+                ]
+
+                st.markdown(shown)
+
+                if references:
+
+                    with st.expander("Evidence sources"):
+
+                        for reference in references:
+                            st.caption(reference)
+
+                # --------------------------------------------
+                # Update conversation memory
+                # --------------------------------------------
+
+                if result.programs:
+                    st.session_state.programs = result.programs
+
+                if result.intent not in (
+                    "greeting",
+                    "thanks",
+                ):
+                    st.session_state.last_intent = (
+                        result.intent
                     )
 
-                    shown = (
-                        "I could not retrieve the requested "
-                        "information. Please try again or "
-                        "consult the official JLU website."
-                    )
+            except Exception:
 
-                    st.error(shown)
+                LOGGER.exception(
+                    "FAST_CHATBOT response generation failed"
+                )
 
+                shown = (
+                    "I could not retrieve the requested "
+                    "information. Please try again or "
+                    "consult the official JLU website."
+                )
+
+                st.error(shown)
+
+    # Save assistant response for chat history.
     st.session_state.messages.append(
         {
             "role": "assistant",
             "content": shown,
-            "sources": refs,
+            "sources": references,
         }
     )
 
